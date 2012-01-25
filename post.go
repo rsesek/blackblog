@@ -23,7 +23,10 @@ import (
 	"crypto/md5"
 	"io"
 	"os"
+	"path"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // A Post contains the metadata about a post.
@@ -163,4 +166,51 @@ func (p *Post) parseMetadataLine(line string) {
 	case "url": p.URLFragment = val
 	case "date": p.Date = val
 	}
+}
+
+// CreateURL constructs the URL of a post based on its metadata.
+func (p* Post) CreateURL() string {
+	// First, create the file's basename.
+	basename := p.URLFragment
+	if basename == "" && p.Title != "" {
+		basename = strings.Replace(p.Title, " ", "_", -1)
+	} else if basename == "" {
+		basename = path.Base(p.Filename)
+		ext := path.Ext(basename)
+		basename = basename[:len(basename) - len(ext)]
+	}
+
+	basename = strings.ToLower(basename)
+	url := basename + ".html"
+
+	// Next, try and get the date of the post to include subdirectories.
+	time := parseDate(p.Date)
+	if time != nil {
+		url = path.Join(strconv.Itoa64(time.Year), strconv.Itoa(time.Month), url)
+	}
+
+	return url
+}
+
+func parseDate(input string) *time.Time {
+	if input == "" {
+		return nil
+	}
+
+	t, err := time.Parse("_2 January 2006", input)
+	if err == nil {
+		return t
+	}
+
+	t, err = time.Parse("January _2, 2006", input)
+	if err == nil {
+		return t
+	}
+
+	t, err = time.Parse("January _2 2006", input)
+	if err == nil {
+		return t
+	}
+
+	return nil
 }
