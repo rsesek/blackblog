@@ -18,12 +18,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"flag"
 	"os"
 	"path"
 	"sort"
 	"strings"
+	"template"
 
 	"github.com/russross/blackfriday"
 )
@@ -64,7 +66,7 @@ func main() {
 			continue
 		}
 
-		html := RenderPost(source)
+		html := RenderPost(post, source)
 		makeParentDirIfNecessary(filePath)
 
 		fd, err := os.Create(filePath)
@@ -125,16 +127,32 @@ func SortPosts(posts []*Post) (postMap PostURLMap, sorted []string) {
 	return
 }
 
+var kPostHeader = []string{
+	"<div id=\"header\">",
+	"	<h1 id=\"title\">{Title}</h1>",
+	"	<h2 id=\"date\">{Date}</h2>",
+	"</div>",
+	"\n",
+}
+
 // RenderPost runs the input source through the blackfriday library.
-func RenderPost(input []byte) []byte {
-	return blackfriday.Markdown(
+func RenderPost(post *Post, input []byte) []byte {
+	tpl := template.New(nil)
+	tpl.Parse(strings.Join(kPostHeader, "\n"))
+
+	buf := bytes.NewBuffer([]byte{})
+	tpl.Execute(buf, post)
+
+	buf.Write(blackfriday.Markdown(
 		input,
 		blackfriday.HtmlRenderer(
 			blackfriday.HTML_USE_SMARTYPANTS |
 				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
 			"",
 			""),
-		0)
+		0))
+
+	return buf.Bytes()
 }
 
 func makeParentDirIfNecessary(dir string) {
