@@ -29,3 +29,28 @@ func TestGetContents(t *testing.T) {
 		t.Errorf("simple_post contents incorrect. Expected '%s', got '%s'", expected, s)
 	}
 }
+
+type parseMetadata struct {
+	input string
+	post Post
+}
+
+func TestParseMetadataLine(t *testing.T) {
+	var results = []parseMetadata{
+		{"~~ Title: This is a title", Post{Title: "This is a title"}},
+		{"~~ Title: ~Weird Data~", Post{Title: "~Weird Data~"}},
+		{"~~ Unknown: Field", Post{}},
+		{"~~ uRl: foo_bar.html", Post{URLFragment: "foo_bar.html"}},
+		{"~~ Date: 12/13/1344", Post{Date: "12/13/1344"}},
+		{"~~Date: 13 January 2012     ", Post{Date: "13 January 2012"}},
+	}
+
+	for _, r := range results {
+		var p Post
+		p.parseMetadataLine(r.input)
+		rp := r.post
+		if p.Title != rp.Title || p.Date != rp.Date || p.URLFragment != rp.URLFragment {
+			t.Errorf("Parse error for input '%s', expected '%v', got '%v'", r.input, r.post, p)
+		}
+	}
+}

@@ -22,6 +22,7 @@ import (
 	"crypto/md5"
 	"io"
 	"os"
+	"strings"
 )
 
 // A Post contains the metadata about a post.
@@ -133,5 +134,26 @@ func (p *Post) UpdateMetadata() {
 		if err == os.EOF || len(line) < 2 || line[0:2] != "~~" {
 			break
 		}
+		p.parseMetadataLine(line)
+	}
+}
+
+func (p *Post) parseMetadataLine(line string) {
+	if len(line) < 2 || line[0:2] != "~~" {
+		return
+	}
+	line = line[2:]
+
+	pieces := strings.SplitN(line, ":", 2)
+	if len(pieces) != 2 {
+		return
+	}
+
+	val := strings.TrimSpace(pieces[1])
+
+	switch strings.ToLower(strings.TrimSpace(pieces[0])) {
+	case "title": p.Title = val
+	case "url": p.URLFragment = val
+	case "date": p.Date = val
 	}
 }
