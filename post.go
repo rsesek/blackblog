@@ -19,6 +19,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
 	"io"
 	"os"
@@ -28,7 +29,7 @@ import (
 // A Post contains the metadata about a post.
 type Post struct {
 	// The full path to the Markdown file containing this post.
-	Filepath string
+	Filename string
 
 	// The title of the post, from the metadata.
 	Title string
@@ -46,7 +47,7 @@ type Post struct {
 // NewPostFromPath creates a new Post object from the file at the given path
 // with the metadata updated.
 func NewPostFromPath(path string) (*Post, os.Error) {
-	p := &Post{Filepath: path}
+	p := &Post{Filename: path}
 	p.UpdateMetadata()
 	if len(p.checksum) < 1 {
 		return nil, os.NewError("Could not checksum blog post")
@@ -56,7 +57,7 @@ func NewPostFromPath(path string) (*Post, os.Error) {
 
 // Open returns an opened file handle for the Post.
 func (p *Post) Open() (*os.File, os.Error) {
-	return os.Open(p.Filepath)
+	return os.Open(p.Filename)
 }
 
 // IsUpToDate checks that the in-memory data about the Post matches that of the
@@ -71,10 +72,16 @@ func (p *Post) IsUpToDate() bool {
 }
 
 func (p *Post) isUpToDateInternal(file *os.File) bool {
-	return false
+	fd, err := p.Open()
+	defer fd.Close()
+	if err != nil {
+		return false
+	}
+
+	return bytes.Equal(p.checksum, computeChecksum(fd))
 }
 
-func (p *Post) computeChecksum(file *os.File) []byte {
+func computeChecksum(file *os.File) []byte {
 	digest := md5.New()
 	io.Copy(digest, file)
 	return digest.Sum()
@@ -125,7 +132,7 @@ func (p *Post) UpdateMetadata() {
 	if err != nil || p.isUpToDateInternal(file) {
 		return
 	}
-	p.checksum = p.computeChecksum(file)
+	p.checksum = computeChecksum(file)
 
 	file.Seek(0, 0)
 	reader := bufio.NewReader(file)

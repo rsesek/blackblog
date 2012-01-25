@@ -54,3 +54,41 @@ func TestParseMetadataLine(t *testing.T) {
 		}
 	}
 }
+
+func TestFullMetadata(t *testing.T) {
+	post, err := NewPostFromPath("./tests/simple_post.md")
+	if err != nil {
+		t.Errorf("Error reading post: %v", err)
+	}
+
+	expected := "Simple Post"
+	if post.Title != expected {
+		t.Errorf("post.Title mismatch, expected '%s', got '%s'", expected, post.Title)
+	}
+
+	expected = "simple_post"
+	if post.URLFragment != expected {
+		t.Errorf("post.URLFragment mismatch, expected '%s', got '%s'", expected, post.URLFragment)
+	}
+
+	expected = "24 Jan 2012"
+	if post.Date != expected {
+		t.Errorf("post.Date mismatch, expected '%s', got '%s'", expected, post.Date)
+	}
+}
+
+func TestIsOutOfDate(t *testing.T) {
+	post, err := NewPostFromPath("./tests/update_test.md")
+	if err != nil {
+		t.Errorf("Error reading post: %v", err)
+	}
+
+	if !post.IsUpToDate() {
+		t.Errorf("Post %s is unexpectedly out of date", post.Filename)
+	}
+
+	post.Filename = "./tests/update_test_out_of_date.md"
+	if post.IsUpToDate() {
+		t.Errorf("Post %s is unexpectedly up-to-date", post.Filename)
+	}
+}
