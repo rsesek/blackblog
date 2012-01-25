@@ -19,7 +19,6 @@ package main
 
 import (
 	"bytes"
-	template2 "exp/template"
 	"fmt"
 	"flag"
 	"io/ioutil"
@@ -141,7 +140,7 @@ var kPostHeader = []string{
 
 // RenderPost runs the input source through the blackfriday library.
 func RenderPost(post *Post, input []byte) []byte {
-	tpl := template.New(nil)
+	tpl := template.New("postHeader")
 	tpl.Parse(strings.Join(kPostHeader, "\n"))
 
 	buf := bytes.NewBuffer([]byte{})
@@ -235,15 +234,15 @@ func wrapPage(content []byte, vars interface{}) ([]byte, os.Error) {
 	return buf.Bytes(), nil
 }
 
-func getTemplate(name string) (*template2.Template, os.Error) {
+func getTemplate(name string) (*template.Template, os.Error) {
 	name = path.Join("templates", name + ".html")
 	file, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}
 
-	tpl := template2.New(name)
-	err = tpl.Parse(string(file))
+	tpl := template.New(name)
+	_, err = tpl.Parse(string(file))
 	if err != nil {
 		return nil, err
 	}

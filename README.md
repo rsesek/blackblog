@@ -9,6 +9,8 @@ mode, you specify a path to the blog posts and it dynamically serves pages on
 the fly, acting as a HTTP web server. In compile mode, it takes a directory
 of posts and outputs a new directory of static HTML files.
 
+Blackblog can be built against Golang c1702f36df03 (release-branch.r60) release/release.r60.3.
+
 ## Starting a Post
 
 Posts use pure Markdown formatting, but have some additional metadata at the
