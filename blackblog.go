@@ -130,54 +130,35 @@ func SortPosts(posts []*Post) (postMap PostURLMap, sorted []string) {
 	return
 }
 
-var kPostHeader = []string{
-	"<div id=\"header\">",
-	"	<h1 id=\"title\">{Title}</h1>",
-	"	<h2 id=\"date\">{Date}</h2>",
-	"</div>",
-	"\n",
-}
-
 // RenderPost runs the input source through the blackfriday library.
 func RenderPost(post *Post, input []byte) []byte {
-	tpl := template.New("postHeader")
-	tpl.Parse(strings.Join(kPostHeader, "\n"))
+	tpl, err := getTemplate("post")
+	if err != nil {
+		return nil
+	}
 
-	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, post)
-
-	buf.Write(blackfriday.Markdown(
+	content := blackfriday.Markdown(
 		input,
 		blackfriday.HtmlRenderer(
 			blackfriday.HTML_USE_SMARTYPANTS |
 				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
 			"",
 			""),
-		0))
+		0)
 
-	return buf.Bytes()
+	buf := bytes.NewBuffer([]byte{})
+	tpl.Execute(buf, map[string]interface{}{
+		"Post": post,
+		"Content": string(content),
+	})
+
+	result, err := wrapPage(buf.Bytes(), map[string]string{"Title": post.Title})
+	return result
 }
 
 func makeParentDirIfNecessary(dir string) {
 	parent, _ := path.Split(dir)
 	os.MkdirAll(parent, 0755)
-}
-
-var kIndex = []string{
-	"<h1>Posts</h1>",
-	"<ul>",
-	"{@|str}",
-	"</ul>",
-}
-
-var kPost = []string{
-	"<li>",
-	"	<a href=\"{URL}\">",
-	"		<span class=\"date\">{Date}</span>",
-	"		<span class=\"title\">{Title}</span>",
-	"	</a>",
-	"</li>",
-	"\n",
 }
 
 // CreateIndex takes the sorted list of posts and generates HTML output listing

@@ -1,0 +1,19 @@
+{{/*
+
+  Post Leaf Page
+
+  This page is used to display the content of a post.
+
+  Variables:
+  - Post: The blackblog.Post object.
+  - Content: The formatted post content.
+
+
+*/}}
+
+<div id="header">
+  <h1 id="title">{{.Post.Title}}</h1>
+  {{if .Date}}<h2 id="date">{{.Post.Date}}</h2>{{end}}
+</div>
+
+{{.Content}}
