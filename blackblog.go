@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"flag"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/russross/blackfriday"
 )
@@ -65,4 +67,36 @@ func main() {
 			""),
 		0)
 	fmt.Printf("%s", output)
+}
+
+// GetPostsInDirectory recursively examines the directory at the path and finds
+// any Markdown (.md) files and returns the corresponding Post objects.
+func GetPostsInDirectory(dirPath string) []*Post {
+	fd, err := os.Open(dirPath)
+	defer fd.Close()
+	if err != nil {
+		return nil
+	}
+
+	files, err := fd.Readdir(-1)
+	if err != nil {
+		return nil
+	}
+
+	var results []*Post
+	for _, file := range files {
+		filePath := path.Join(dirPath, file.Name)
+		if file.IsDirectory() {
+			subfiles := GetPostsInDirectory(filePath)
+			if subfiles != nil {
+				results = append(results, subfiles...)
+			}
+		} else if strings.HasSuffix(file.Name, ".md") {
+			if post, err := NewPostFromPath(filePath); post != nil && err == nil {
+				results = append(results, post)
+			}
+		}
+	}
+
+	return results
 }
