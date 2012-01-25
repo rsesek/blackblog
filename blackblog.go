@@ -22,6 +22,7 @@ import (
 	"flag"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/russross/blackfriday"
@@ -99,4 +100,20 @@ func GetPostsInDirectory(dirPath string) []*Post {
 	}
 
 	return results
+}
+
+// PostURLMap keys Post objects by their final URL.
+type PostURLMap map[string]*Post
+
+// SortPosts creates URLs for each Post and returns a map that links the URL to
+// the post and a slice of the URLs in sorted order.
+func SortPosts(posts []*Post) (postMap PostURLMap, sorted []string) {
+	postMap = make(PostURLMap, len(posts))
+	for _, post := range posts {
+		url := post.CreateURL()
+		postMap[url] = post
+		sorted = append(sorted, url)
+	}
+	sort.Strings(sorted)
+	return
 }

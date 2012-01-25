@@ -33,3 +33,33 @@ func TestGetPostsInDir(t *testing.T) {
 		}
 	}
 }
+
+func TestSortedPosts(t *testing.T) {
+	posts := []*Post{
+		&Post{URLFragment: "alpha"},
+		&Post{URLFragment: "b_test", Date: "6 January 2012"},
+		&Post{URLFragment: "c_test", Date: "18 January 2012"},
+		&Post{URLFragment: "test", Date: "7 February 2011"},
+	}
+	order := []string{
+		"2011/2/test.html",
+		"2012/1/b_test.html",
+		"2012/1/c_test.html",
+		"alpha.html",
+	}
+
+	postMap, sorted := SortPosts(posts)
+	if len(posts) != len(postMap) || len(postMap) != len(sorted) {
+		t.Errorf("Count of returned values mismatch, expected %d, got len(map) = %d, len(slice) = %d", len(posts), len(postMap), len(sorted))
+	}
+
+	for i, expected := range order {
+		if expected != sorted[i] {
+			t.Errorf("Sorted order mismatch. At %d, expected '%s', got '%s'", i, expected, sorted[i])
+		}
+		post, ok := postMap[expected]
+		if !ok || post == nil {
+			t.Errorf("Error getting post in map for '%s'", expected)
+		}
+	}
+}
