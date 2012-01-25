@@ -35,6 +35,7 @@ var (
 	flagSource = flag.String("root", "", "The root directory of all Markdown posts")
 	flagPort = flag.String("port", "", "The port to bind to for running the standalone HTTP server")
 	flagDest = flag.String("dest", "", "The output directory for running in comiple mode")
+	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
 )
 
 func main() {
@@ -216,7 +217,7 @@ func wrapPage(content []byte, vars interface{}) ([]byte, os.Error) {
 }
 
 func getTemplate(name string) (*template.Template, os.Error) {
-	name = path.Join("templates", name + ".html")
+	name = path.Join(*flagTemplates, name + ".html")
 	file, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
