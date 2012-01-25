@@ -47,27 +47,34 @@ func main() {
 		os.Exit(2)
 	}
 
-	post, err := NewPostFromPath(*flagSource)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
-		os.Exit(3)
+	if *flagPort != "" {
+		fmt.Fprintf(os.Stderr, "** SERVER NOT IMPLEMENTED **\n")
+		os.Exit(-1)
 	}
 
-	data, err := post.GetContents()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
-		os.Exit(4)
-	}
+	posts := GetPostsInDirectory(*flagSource)
+	postMap, sortList := SortPosts(posts)
+	for _, url := range sortList {
+		post := postMap[url]
+		filePath := path.Join(*flagDest, url)
 
-	output := blackfriday.Markdown(
-		data,
-		blackfriday.HtmlRenderer(
-			blackfriday.HTML_USE_SMARTYPANTS |
-				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
-			"",
-			""),
-		0)
-	fmt.Printf("%s", output)
+		source, err := post.GetContents()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading post at %s: %v\n", post.Filename, err)
+			continue
+		}
+
+		html := RenderPost(source)
+		makeParentDirIfNecessary(filePath)
+
+		fd, err := os.Create(filePath)
+		defer fd.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating output file: %v\n", err)
+			continue
+		}
+		fd.Write(html)
+	}
 }
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
@@ -116,4 +123,21 @@ func SortPosts(posts []*Post) (postMap PostURLMap, sorted []string) {
 	}
 	sort.Strings(sorted)
 	return
+}
+
+// RenderPost runs the input source through the blackfriday library.
+func RenderPost(input []byte) []byte {
+	return blackfriday.Markdown(
+		input,
+		blackfriday.HtmlRenderer(
+			blackfriday.HTML_USE_SMARTYPANTS |
+				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
+			"",
+			""),
+		0)
+}
+
+func makeParentDirIfNecessary(dir string) {
+	parent, _ := path.Split(dir)
+	os.MkdirAll(parent, 0755)
 }
