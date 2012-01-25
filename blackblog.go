@@ -19,8 +19,10 @@ package main
 
 import (
 	"bytes"
+	template2 "exp/template"
 	"fmt"
 	"flag"
+	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -208,5 +210,46 @@ func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
 		return
 	}
 
-	fd.Write(buf.Bytes())
+	content, err := wrapPage(buf.Bytes(), map[string]string{"Title": "Posts"})
+	if err != nil {
+		fmt.Printf("Error creating index.html: %v\n", err)
+		return
+	}
+	fd.Write(content)
+}
+
+func wrapPage(content []byte, vars interface{}) ([]byte, os.Error) {
+	buf := bytes.NewBuffer([]byte{})
+
+	header, err := getTemplate("header")
+	if err != nil {
+		return nil, err
+	}
+
+	footer, err := getTemplate("footer")
+	if err != nil {
+		return nil, err
+	}
+
+	header.Execute(buf, vars)
+	buf.Write(content)
+	footer.Execute(buf, vars)
+
+	return buf.Bytes(), nil
+}
+
+func getTemplate(name string) (*template2.Template, os.Error) {
+	name = path.Join("templates", name + ".html")
+	file, err := ioutil.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+
+	tpl := template2.New(name)
+	err = tpl.Parse(string(file))
+	if err != nil {
+		return nil, err
+	}
+
+	return tpl, nil
 }
