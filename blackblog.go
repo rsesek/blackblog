@@ -77,6 +77,8 @@ func main() {
 		}
 		fd.Write(html)
 	}
+
+	CreateIndex(path.Join(*flagDest, "index.html"), postMap, sortList)
 }
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
@@ -158,4 +160,53 @@ func RenderPost(post *Post, input []byte) []byte {
 func makeParentDirIfNecessary(dir string) {
 	parent, _ := path.Split(dir)
 	os.MkdirAll(parent, 0755)
+}
+
+var kIndex = []string{
+	"<h1>Posts</h1>",
+	"<ul>",
+	"{@|str}",
+	"</ul>",
+}
+
+var kPost = []string{
+	"<li>",
+	"	<a href=\"{URL}\">",
+	"		<span class=\"date\">{Date}</span>",
+	"		<span class=\"title\">{Title}</span>",
+	"	</a>",
+	"</li>",
+	"\n",
+}
+
+// CreateIndex takes the sorted list of posts and generates HTML output listing
+// each one.
+func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
+	tpl := template.New(nil)
+	tpl.Parse(strings.Join(kPost, "\n"))
+
+	buf := bytes.NewBuffer([]byte{})
+	for _, url := range sortOrder {
+		tpl.Execute(buf, map[string]string{
+			"URL": url,
+			"Date": postMap[url].Date,
+			"Title": postMap[url].Title,
+		});
+	}
+
+	posts := buf.Bytes()
+
+	buf = bytes.NewBuffer([]byte{})
+
+	tpl = template.New(nil)
+	tpl.Parse(strings.Join(kIndex, "\n"))
+	tpl.Execute(buf, posts)
+
+	fd, err := os.Create(filepath)
+	defer fd.Close()
+	if err != nil {
+		return
+	}
+
+	fd.Write(buf.Bytes())
 }
