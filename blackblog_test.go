@@ -63,3 +63,17 @@ func TestSortedPosts(t *testing.T) {
 		}
 	}
 }
+
+func TestGetRootPath(t *testing.T) {
+	results := map[string]string {
+		"2012/1/test.html": "../../",
+		"index.html": "",
+	}
+
+	for k, v := range results {
+		actual := getRootPath(k)
+		if actual != v {
+			t.Errorf("GetRootPath() fail for '%s', expected '%s', got '%s'", k, v, actual)
+		}
+	}
+}

@@ -6,11 +6,13 @@
 
   Variables:
   - Title: The page's title.
+  - RootPath: The relative path to the root of the output directory.
 
 */}}<!DOCTYPE html>
 <html lang="en">
   <head>
     <title>Blog Title - {{.Title}}</title>
+    <!-- StyleSheet: ../{{.RootPath}}css/style.css -->
   </head>
 
   <body>

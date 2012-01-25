@@ -153,7 +153,10 @@ func RenderPost(post *Post, input []byte) []byte {
 		"Content": string(content),
 	})
 
-	result, err := wrapPage(buf.Bytes(), map[string]string{"Title": post.Title})
+	result, err := wrapPage(buf.Bytes(), map[string]string{
+		"Title": post.Title,
+		"RootPath": getRootPath(post.CreateURL()),
+	})
 	return result
 }
 
@@ -188,7 +191,10 @@ func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
 		return
 	}
 
-	content, err := wrapPage(buf.Bytes(), map[string]string{"Title": "Posts"})
+	content, err := wrapPage(buf.Bytes(), map[string]string{
+		"Title": "Posts",
+		"RootPath": "",
+	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
 		return
@@ -230,4 +236,8 @@ func getTemplate(name string) (*template.Template, os.Error) {
 	}
 
 	return tpl, nil
+}
+
+func getRootPath(name string) string {
+	return strings.Repeat("../", strings.Count(name, "/"))
 }
