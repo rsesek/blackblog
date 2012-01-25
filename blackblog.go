@@ -184,25 +184,22 @@ var kPost = []string{
 // CreateIndex takes the sorted list of posts and generates HTML output listing
 // each one.
 func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
-	tpl := template.New(nil)
-	tpl.Parse(strings.Join(kPost, "\n"))
+	tpl, err := getTemplate("index")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
+	}
 
-	buf := bytes.NewBuffer([]byte{})
-	for _, url := range sortOrder {
-		tpl.Execute(buf, map[string]string{
+	posts := make([]map[string]string, len(sortOrder))
+	for i, url := range sortOrder {
+		posts[i] = map[string]string{
 			"URL": url,
 			"Date": postMap[url].Date,
 			"Title": postMap[url].Title,
-		});
+		}
 	}
 
-	posts := buf.Bytes()
-
-	buf = bytes.NewBuffer([]byte{})
-
-	tpl = template.New(nil)
-	tpl.Parse(strings.Join(kIndex, "\n"))
-	tpl.Execute(buf, posts)
+	buf := bytes.NewBuffer([]byte{})
+	tpl.Execute(buf, map[string]interface{}{"Posts": posts})
 
 	fd, err := os.Create(filepath)
 	defer fd.Close()
@@ -212,7 +209,7 @@ func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
 
 	content, err := wrapPage(buf.Bytes(), map[string]string{"Title": "Posts"})
 	if err != nil {
-		fmt.Printf("Error creating index.html: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
 		return
 	}
 	fd.Write(content)

@@ -1,0 +1,23 @@
+{{/*
+
+  Index
+
+  This is the index of all the posts in the blog.
+
+  Variables:
+  - Posts: An array of objects containing: URL, Date, and Title.
+
+*/}}
+
+<h1>Posts</h1>
+
+<ul>
+{{range $_, $post := .Posts}}
+  <li>
+    <a href="{{.URL}}">
+      {{if .Date}}<span class="date">{{.Date}}</span>{{end}}
+      <span class="title">{{.Title}}</span>
+    </a>
+  </li>
+{{end}}
+</ul>
