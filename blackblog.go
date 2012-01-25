@@ -142,6 +142,7 @@ func RenderPost(post *Post, input []byte) []byte {
 		input,
 		blackfriday.HtmlRenderer(
 			blackfriday.HTML_USE_SMARTYPANTS |
+				blackfriday.HTML_USE_XHTML |
 				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
 			"",
 			""),
