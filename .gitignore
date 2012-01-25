@@ -1,3 +1,6 @@
 *.swo
 *.swp
-_go_.6
+_*
+6.out
+blackblog
+out/
