@@ -17,6 +17,6 @@ include $(GOROOT)/src/Make.inc
 
 TARG=blackblog
 
-GOFILES=blackblog.go
+GOFILES=blackblog.go post.go
 
 include $(GOROOT)/src/Make.cmd

@@ -20,7 +20,6 @@ package main
 import (
 	"fmt"
 	"flag"
-	"io/ioutil"
 	"os"
 
 	"github.com/russross/blackfriday"
@@ -45,18 +44,17 @@ func main() {
 		os.Exit(2)
 	}
 
-	fd, err := os.Open(*flagSource)
+	post, err := NewPostFromPath(*flagSource)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
 		os.Exit(3)
 	}
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := post.GetContents()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
 		os.Exit(4)
 	}
-
 
 	output := blackfriday.Markdown(
 		data,
