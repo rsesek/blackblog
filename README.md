@@ -11,6 +11,25 @@ of posts and outputs a new directory of static HTML files.
 
 Blackblog can be built against Golang c1702f36df03 (release-branch.r60) release/release.r60.3.
 
+## Installation
+
+    $ goinstall github.com/russross/blackfriday
+    $ goinstall github.com/rsesek/blackblog
+
+    $ mkdir my_new_blog
+    $ cd my_new_blog
+    $ cp -R $GOTOOT/src/pkg/github.com/rsesek/blackblog/templates .
+    $ vim templates/header.html  # Change "Blog Title" to what you want.
+
+    $ vim first_post.md
+
+    $ blackblog -root=. -templates=./templates/ -out=../blog_out
+    $ scp -r ../blog_out example.com:~/public_html/blog
+
+This installs the two Go packages you need, starts a new blog and copies the
+templates so they can be customized for your blog, and then compiles the blog
+and uploads it to your server.
+
 ## Starting a Post
 
 Posts use pure Markdown formatting, but have some additional metadata at the
