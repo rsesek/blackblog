@@ -1,6 +1,6 @@
 # Blackblog
 
-Blackblog is a simple blogging platform written in Go, that uses the
+Blackblog is a simple blogging platform written in Go. It uses the
 [Blackfriday Markdown](https://github.com/russross/blackfriday) library to
 format posts.
 
@@ -11,6 +11,11 @@ of posts and outputs a new directory of static HTML files.
 
 Blackblog can be built against Golang c1702f36df03 (release-branch.r60) release/release.r60.3.
 
+## Alpha Software
+
+Blackblog is alpha software. It is used to publish my personal blog, but it is
+not yet feature complete.
+
 ## Installation
 
     $ goinstall github.com/russross/blackfriday
@@ -18,7 +23,7 @@ Blackblog can be built against Golang c1702f36df03 (release-branch.r60) release/
 
     $ mkdir my_new_blog
     $ cd my_new_blog
-    $ cp -R $GOTOOT/src/pkg/github.com/rsesek/blackblog/templates .
+    $ cp -R $GOROOT/src/pkg/github.com/rsesek/blackblog/templates .
     $ vim templates/header.html  # Change "Blog Title" to what you want.
 
     $ vim first_post.md
@@ -27,7 +32,7 @@ Blackblog can be built against Golang c1702f36df03 (release-branch.r60) release/
     $ scp -r ../blog_out example.com:~/public_html/blog
 
 This installs the two Go packages you need, starts a new blog and copies the
-templates so they can be customized for your blog, and then compiles the blog
+templates so they can be customized for your blog. It then compiles the blog
 and uploads it to your server.
 
 ## Starting a Post
