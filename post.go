@@ -21,6 +21,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/md5"
+	"errors"
 	"io"
 	"os"
 	"path"
@@ -49,17 +50,17 @@ type Post struct {
 
 // NewPostFromPath creates a new Post object from the file at the given path
 // with the metadata updated.
-func NewPostFromPath(path string) (*Post, os.Error) {
+func NewPostFromPath(path string) (*Post, error) {
 	p := &Post{Filename: path}
 	p.UpdateMetadata()
 	if len(p.checksum) < 1 {
-		return nil, os.NewError("Could not checksum blog post")
+		return nil, errors.New("Could not checksum blog post")
 	}
 	return p, nil
 }
 
 // Open returns an opened file handle for the Post.
-func (p *Post) Open() (*os.File, os.Error) {
+func (p *Post) Open() (*os.File, error) {
 	return os.Open(p.Filename)
 }
 
@@ -87,11 +88,11 @@ func (p *Post) isUpToDateInternal(file *os.File) bool {
 func computeChecksum(file *os.File) []byte {
 	digest := md5.New()
 	io.Copy(digest, file)
-	return digest.Sum()
+	return digest.Sum(nil)
 }
 
 // GetContents returns the Markdown content of a post, excluding metadata.
-func (p *Post) GetContents() ([]byte, os.Error) {
+func (p *Post) GetContents() ([]byte, error) {
 	file, err := p.Open()
 	defer file.Close()
 	if err != nil {
@@ -106,7 +107,7 @@ func (p *Post) GetContents() ([]byte, os.Error) {
 
 		// If an error occurred, return the error except for EOF.
 		if err != nil {
-			if err == os.EOF {
+			if err == io.EOF {
 				err = nil
 			}
 			return result, err
@@ -141,7 +142,7 @@ func (p *Post) UpdateMetadata() {
 	reader := bufio.NewReader(file)
 	for {
 		line, err := reader.ReadString('\n')
-		if err == os.EOF || len(line) < 2 || line[0:2] != "~~" {
+		if err == io.EOF || len(line) < 2 || line[0:2] != "~~" {
 			break
 		}
 		p.parseMetadataLine(line)
@@ -162,14 +163,17 @@ func (p *Post) parseMetadataLine(line string) {
 	val := strings.TrimSpace(pieces[1])
 
 	switch strings.ToLower(strings.TrimSpace(pieces[0])) {
-	case "title": p.Title = val
-	case "url": p.URLFragment = val
-	case "date": p.Date = val
+	case "title":
+		p.Title = val
+	case "url":
+		p.URLFragment = val
+	case "date":
+		p.Date = val
 	}
 }
 
 // CreateURL constructs the URL of a post based on its metadata.
-func (p* Post) CreateURL() string {
+func (p *Post) CreateURL() string {
 	// First, create the file's basename.
 	basename := p.URLFragment
 	if basename == "" && p.Title != "" {
@@ -177,7 +181,7 @@ func (p* Post) CreateURL() string {
 	} else if basename == "" {
 		basename = path.Base(p.Filename)
 		ext := path.Ext(basename)
-		basename = basename[:len(basename) - len(ext)]
+		basename = basename[:len(basename)-len(ext)]
 	}
 
 	basename = strings.ToLower(basename)
@@ -186,13 +190,13 @@ func (p* Post) CreateURL() string {
 	// Next, try and get the date of the post to include subdirectories.
 	time := parseDate(p.Date)
 	if time != nil {
-		url = path.Join(strconv.Itoa64(time.Year), strconv.Itoa(time.Month), url)
+		url = path.Join(strconv.FormatInt(time.Year, 10), strconv.Itoa(time.Month), url)
 	}
 
 	return url
 }
 
-func parseDate(input string) *time.Time {
+func parseDate(input string) time.Time {
 	if input == "" {
 		return nil
 	}

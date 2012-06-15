@@ -33,7 +33,7 @@ func TestGetContents(t *testing.T) {
 
 type parseMetadata struct {
 	input string
-	post Post
+	post  Post
 }
 
 func TestParseMetadataLine(t *testing.T) {
@@ -95,7 +95,7 @@ func TestIsOutOfDate(t *testing.T) {
 }
 
 type createURL struct {
-	url string
+	url  string
 	post Post
 }
 
@@ -104,8 +104,8 @@ func TestCreateURL(t *testing.T) {
 		{"2012/1/test.html", Post{URLFragment: "test", Date: "25 January 2012"}},
 		{"2012/12/test.html.html", Post{URLFragment: "test.html", Date: "12 December 2012"}},
 		{"2012/1/foobar.html", Post{Title: "Foobar", Date: "1 January 2012"}},
-		{"2012/4/some_post.html", Post{Title: "Some Post", Date:"4 April 2012"}},
-		{"2012/3/a_post.html", Post{Filename: "some/path/a_post.md", Date:"March 3, 2012"}},
+		{"2012/4/some_post.html", Post{Title: "Some Post", Date: "4 April 2012"}},
+		{"2012/3/a_post.html", Post{Filename: "some/path/a_post.md", Date: "March 3, 2012"}},
 		{"test_post.html", Post{Filename: "/some/test/test_post.md"}},
 		{"test_test_test.html", Post{Title: "Test tEsT TEST"}},
 		{"foobar.html", Post{URLFragment: "foobar"}},
@@ -120,8 +120,8 @@ func TestCreateURL(t *testing.T) {
 }
 
 type parseDateResult struct {
-	in string
-	out *time.Time
+	in  string
+	out time.Time
 }
 
 func TestParseDate(t *testing.T) {

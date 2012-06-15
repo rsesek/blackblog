@@ -19,22 +19,22 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"sort"
 	"strings"
-	"template"
+	"text/template"
 
 	"github.com/russross/blackfriday"
 )
 
 var (
-	flagSource = flag.String("root", "", "The root directory of all Markdown posts")
-	flagPort = flag.String("port", "", "The port to bind to for running the standalone HTTP server")
-	flagDest = flag.String("dest", "", "The output directory for running in comiple mode")
+	flagSource    = flag.String("root", "", "The root directory of all Markdown posts")
+	flagPort      = flag.String("port", "", "The port to bind to for running the standalone HTTP server")
+	flagDest      = flag.String("dest", "", "The output directory for running in comiple mode")
 	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
 )
 
@@ -141,8 +141,8 @@ func RenderPost(post *Post, input []byte) []byte {
 	content := blackfriday.Markdown(
 		input,
 		blackfriday.HtmlRenderer(
-			blackfriday.HTML_USE_SMARTYPANTS |
-				blackfriday.HTML_USE_XHTML |
+			blackfriday.HTML_USE_SMARTYPANTS|
+				blackfriday.HTML_USE_XHTML|
 				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
 			"",
 			""),
@@ -150,12 +150,12 @@ func RenderPost(post *Post, input []byte) []byte {
 
 	buf := bytes.NewBuffer([]byte{})
 	tpl.Execute(buf, map[string]interface{}{
-		"Post": post,
+		"Post":    post,
 		"Content": string(content),
 	})
 
 	result, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title": post.Title,
+		"Title":    post.Title,
 		"RootPath": getRootPath(post.CreateURL()),
 	})
 	return result
@@ -177,8 +177,8 @@ func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
 	posts := make([]map[string]string, len(sortOrder))
 	for i, url := range sortOrder {
 		posts[i] = map[string]string{
-			"URL": url,
-			"Date": postMap[url].Date,
+			"URL":   url,
+			"Date":  postMap[url].Date,
 			"Title": postMap[url].Title,
 		}
 	}
@@ -193,7 +193,7 @@ func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
 	}
 
 	content, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title": "Posts",
+		"Title":    "Posts",
 		"RootPath": "",
 	})
 	if err != nil {
@@ -203,7 +203,7 @@ func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
 	fd.Write(content)
 }
 
-func wrapPage(content []byte, vars interface{}) ([]byte, os.Error) {
+func wrapPage(content []byte, vars interface{}) ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{})
 
 	header, err := getTemplate("header")
@@ -223,8 +223,8 @@ func wrapPage(content []byte, vars interface{}) ([]byte, os.Error) {
 	return buf.Bytes(), nil
 }
 
-func getTemplate(name string) (*template.Template, os.Error) {
-	name = path.Join(*flagTemplates, name + ".html")
+func getTemplate(name string) (*template.Template, error) {
+	name = path.Join(*flagTemplates, name+".html")
 	file, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
