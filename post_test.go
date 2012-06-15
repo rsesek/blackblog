@@ -125,19 +125,23 @@ type parseDateResult struct {
 }
 
 func TestParseDate(t *testing.T) {
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		t.Fatal(err)
+	}
 	results := []parseDateResult{
-		{"13 September 2012", &time.Time{Year: 2012, Month: 9, Day: 13}},
-		{"1 April 2012", &time.Time{Year: 2012, Month: 4, Day: 1}},
-		{"October 12 2011", &time.Time{Year: 2011, Month: 10, Day: 12}},
-		{"August 2 2011", &time.Time{Year: 2011, Month: 8, Day: 2}},
-		{"March 2, 2012", &time.Time{Year: 2012, Month: 3, Day: 2}},
+		{"13 September 2012", time.Date(2012, 9, 13, 0, 0, 0, 0, loc)},
+		{"1 April 2012", time.Date(2012, 4, 1, 0, 0, 0, 0, loc)},
+		{"October 12 2011", time.Date(2011, 10, 12, 0, 0, 0, 0, loc)},
+		{"August 2 2011", time.Date(2011, 8, 2, 0, 0, 0, 0, loc)},
+		{"March 2, 2012", time.Date(2012, 3, 2, 0, 0, 0, 0, loc)},
 	}
 
 	for _, r := range results {
 		actual := parseDate(r.in)
-		if actual == nil {
+		if actual.IsZero() {
 			t.Errorf("Failed to parse input '%s'", r.in)
-		} else if actual.Year != r.out.Year || actual.Month != r.out.Month || actual.Day != r.out.Day {
+		} else if actual.Year() != r.out.Year() || actual.Month() != r.out.Month() || actual.Day() != r.out.Day() {
 			t.Errorf("Date parse fail. Input '%s', expected '%v', got '%v'", r.in, r.out, actual)
 		}
 	}

@@ -188,9 +188,9 @@ func (p *Post) CreateURL() string {
 	url := basename + ".html"
 
 	// Next, try and get the date of the post to include subdirectories.
-	time := parseDate(p.Date)
-	if time != nil {
-		url = path.Join(strconv.FormatInt(time.Year, 10), strconv.Itoa(time.Month), url)
+	if t := parseDate(p.Date); !t.IsZero() {
+		year, month, _ := t.Date()
+		url = path.Join(strconv.FormatInt(int64(year), 10), strconv.Itoa(int(month)), url)
 	}
 
 	return url
@@ -198,7 +198,7 @@ func (p *Post) CreateURL() string {
 
 func parseDate(input string) time.Time {
 	if input == "" {
-		return nil
+		return time.Time{}
 	}
 
 	t, err := time.Parse("_2 January 2006", input)
@@ -216,5 +216,5 @@ func parseDate(input string) time.Time {
 		return t
 	}
 
-	return nil
+	return time.Time{}
 }

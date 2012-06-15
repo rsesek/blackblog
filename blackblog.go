@@ -99,13 +99,13 @@ func GetPostsInDirectory(dirPath string) []*Post {
 
 	var results []*Post
 	for _, file := range files {
-		filePath := path.Join(dirPath, file.Name)
-		if file.IsDirectory() {
+		filePath := path.Join(dirPath, file.Name())
+		if file.IsDir() {
 			subfiles := GetPostsInDirectory(filePath)
 			if subfiles != nil {
 				results = append(results, subfiles...)
 			}
-		} else if strings.HasSuffix(file.Name, ".md") {
+		} else if strings.HasSuffix(file.Name(), ".md") {
 			if post, err := NewPostFromPath(filePath); post != nil && err == nil {
 				results = append(results, post)
 			}
