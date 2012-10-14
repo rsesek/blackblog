@@ -18,17 +18,12 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"sort"
 	"strings"
-	"text/template"
-
-	"github.com/russross/blackfriday"
 )
 
 var (
@@ -129,114 +124,6 @@ func SortPosts(posts []*Post) (postMap PostURLMap, sorted []string) {
 	}
 	sort.Strings(sorted)
 	return
-}
-
-// RenderPost runs the input source through the blackfriday library.
-func RenderPost(post *Post, input []byte) []byte {
-	tpl, err := getTemplate("post")
-	if err != nil {
-		return nil
-	}
-
-	content := blackfriday.Markdown(
-		input,
-		blackfriday.HtmlRenderer(
-			blackfriday.HTML_USE_SMARTYPANTS|
-				blackfriday.HTML_USE_XHTML|
-				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
-			"",
-			""),
-		0)
-
-	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, map[string]interface{}{
-		"Post":    post,
-		"Content": string(content),
-	})
-
-	result, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title":    post.Title,
-		"RootPath": getRootPath(post.CreateURL()),
-	})
-	return result
-}
-
-func makeParentDirIfNecessary(dir string) {
-	parent, _ := path.Split(dir)
-	os.MkdirAll(parent, 0755)
-}
-
-// CreateIndex takes the sorted list of posts and generates HTML output listing
-// each one.
-func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
-	tpl, err := getTemplate("index")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
-	}
-
-	posts := make([]map[string]string, len(sortOrder))
-	for i, url := range sortOrder {
-		posts[i] = map[string]string{
-			"URL":   url,
-			"Date":  postMap[url].Date,
-			"Title": postMap[url].Title,
-		}
-	}
-
-	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, map[string]interface{}{"Posts": posts})
-
-	fd, err := os.Create(filepath)
-	defer fd.Close()
-	if err != nil {
-		return
-	}
-
-	content, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title":    "Posts",
-		"RootPath": "",
-	})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
-		return
-	}
-	fd.Write(content)
-}
-
-func wrapPage(content []byte, vars interface{}) ([]byte, error) {
-	buf := bytes.NewBuffer([]byte{})
-
-	header, err := getTemplate("header")
-	if err != nil {
-		return nil, err
-	}
-
-	footer, err := getTemplate("footer")
-	if err != nil {
-		return nil, err
-	}
-
-	header.Execute(buf, vars)
-	buf.Write(content)
-	footer.Execute(buf, vars)
-
-	return buf.Bytes(), nil
-}
-
-func getTemplate(name string) (*template.Template, error) {
-	name = path.Join(*flagTemplates, name+".html")
-	file, err := ioutil.ReadFile(name)
-	if err != nil {
-		return nil, err
-	}
-
-	tpl := template.New(name)
-	_, err = tpl.Parse(string(file))
-	if err != nil {
-		return nil, err
-	}
-
-	return tpl, nil
 }
 
 func getRootPath(name string) string {
