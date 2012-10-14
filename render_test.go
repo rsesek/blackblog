@@ -56,3 +56,60 @@ func TestRootTree(t *testing.T) {
 		}
 	}
 }
+
+func TestTwoDirs(t *testing.T) {
+	post := &Post{URLFragment: "test_post", Date: "14 October 2012"}
+	root, err := createRenderTree([]*Post{post})
+
+	if err != nil {
+		t.Fatal("Unexpected error creating render tree", err)
+	}
+
+	contents, ok := root.object.(renderTree)
+	if !ok {
+		t.Errorf("Root object should be a render tree, is %v", root.object)
+	}
+
+	if len(contents) != 1 {
+		t.Errorf("Root's renderTree should have 1 object, has %d", len(contents))
+	}
+
+	year, ok := contents["2012"]
+	if !ok {
+		t.Fatalf("Year directory not present")
+	}
+
+	if year.t != renderTypeDirectory {
+		t.Errorf("Year should be a directory, is %v", year.t)
+	}
+	contents, ok = year.object.(renderTree)
+	if !ok {
+		t.Fatalf("Year should be a renderTree, got %v", contents)
+	}
+
+	month, ok := contents["10"]
+	if !ok {
+		t.Fatalf("Month directory not present")
+	}
+
+	if month.t != renderTypeDirectory {
+		t.Errorf("Month should be a directory, is %v", month.t)
+	}
+	contents, ok = month.object.(renderTree)
+	if !ok {
+		t.Fatalf("Month should be a renderTree, got %v", contents)
+	}
+
+	postRender, ok := contents["test_post.html"]
+	if !ok {
+		t.Fatalf("Test post not present")
+	}
+	if postRender.t != renderTypePost {
+		t.Errorf("Test post should be a post, got %v", postRender.t)
+	}
+	if testPost, ok := postRender.object.(*Post); !ok {
+		t.Errorf("Test post should be a post, got %v", testPost)
+	} else if testPost != post {
+		t.Errorf("Post should equal %v, got %v", post, testPost)
+	}
+}

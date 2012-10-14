@@ -92,11 +92,13 @@ func findOrCreateDirNode(url string, root *render) (*render, error) {
 			}
 		} else {
 			// A node was not found here, so create it.
-			node = &render{
+			rt := node.object.(renderTree)
+			rt[part] = &render{
 				t:      renderTypeDirectory,
 				object: make(renderTree),
 				parent: node,
 			}
+			node = rt[part]
 		}
 	}
 
