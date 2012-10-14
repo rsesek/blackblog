@@ -63,7 +63,6 @@ func createRenderTree(posts []*Post) (*render, error) {
 func insertPost(post *Post, root *render) error {
 	url := post.CreateURL()
 	dir, err := findOrCreateDirNode(url, root)
-	fmt.Printf("%v\n", url)
 	if err != nil {
 		return err
 	}
@@ -112,7 +111,6 @@ func writeRenderTree(dest string, root *render) error {
 	if root.t != renderTypeDirectory {
 		return fmt.Errorf("writeRenderTree for %q: not a directory", dest)
 	}
-	fmt.Printf("%p %v\n", root, root)
 
 	// Iterate over this renderTree's subnodes.
 	for part, render := range root.object.(renderTree) {
