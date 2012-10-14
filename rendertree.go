@@ -120,7 +120,7 @@ func writeRenderTree(dest string, root *render) error {
 		if render.t == renderTypeDirectory {
 			// For directories, ensure that the parent directory exists. If it
 			// does not, create it and add a redirect index.html file.
-			if err := os.Mkdir(p, 0755); err != nil {
+			if err := os.Mkdir(p, 0755); err != nil && !os.IsExist(err) {
 				return err
 			}
 			createRedirectFile(p, func() (depth int) {
