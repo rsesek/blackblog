@@ -63,6 +63,7 @@ func createRenderTree(posts []*Post) (*render, error) {
 func insertPost(post *Post, root *render) error {
 	url := post.CreateURL()
 	dir, err := findOrCreateDirNode(url, root)
+	fmt.Printf("%v\n", url)
 	if err != nil {
 		return err
 	}
@@ -103,4 +104,50 @@ func findOrCreateDirNode(url string, root *render) (*render, error) {
 	}
 
 	return node, nil
+}
+
+// writeRenderTree takes a root render object and writes out a rendered site
+// to the given destination path.
+func writeRenderTree(dest string, root *render) error {
+	if root.t != renderTypeDirectory {
+		return fmt.Errorf("writeRenderTree for %q: not a directory", dest)
+	}
+	fmt.Printf("%p %v\n", root, root)
+
+	// Iterate over this renderTree's subnodes.
+	for part, render := range root.object.(renderTree) {
+		p := path.Join(dest, part)
+		if render.t == renderTypeDirectory {
+			// For directories, ensure that the parent directory exists. If it
+			// does not, create it and add a redirect index.html file.
+			if err := os.Mkdir(p, 0755); err != nil {
+				return err
+			}
+			createRedirectFile(p, func() (depth int) {
+				for n := render; n != nil; n = n.parent {
+					depth++
+				}
+				return
+			}())
+			// Recurse on its subnodes.
+			writeRenderTree(p, render)
+		} else if render.t == renderTypePost {
+			// For posts, just render the content into the template.
+			post := render.object.(*Post)
+			content, err := post.GetContents()
+			if err != nil {
+				return err
+			}
+
+			html := RenderPost(post, content)
+			f, err := os.Create(p)
+			if err != nil {
+				return err
+			}
+			f.Write(html)
+			f.Close()
+		}
+	}
+
+	return nil
 }

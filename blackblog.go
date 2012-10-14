@@ -53,28 +53,17 @@ func main() {
 
 	posts := GetPostsInDirectory(*flagSource)
 	postMap, sortList := SortPosts(posts)
-	for _, url := range sortList {
-		post := postMap[url]
-		filePath := path.Join(*flagDest, url)
 
-		source, err := post.GetContents()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading post at %s: %v\n", post.Filename, err)
-			continue
-		}
-
-		html := RenderPost(post, source)
-		makeParentDirIfNecessary(filePath)
-
-		fd, err := os.Create(filePath)
-		defer fd.Close()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating output file: %v\n", err)
-			continue
-		}
-		fd.Write(html)
+	renderTree, err := createRenderTree(posts)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "createRenderTree: %v\n", err)
+		os.Exit(3)
 	}
 
+	if err := writeRenderTree(*flagDest, renderTree); err != nil {
+		fmt.Fprintf(os.Stderr, "writeRenderTree: %v\n", err)
+		os.Exit(3)
+	}
 	CreateIndex(path.Join(*flagDest, "index.html"), postMap, sortList)
 }
 

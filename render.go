@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/russross/blackfriday"
@@ -58,9 +59,9 @@ func RenderPost(post *Post, input []byte) []byte {
 	return result
 }
 
-func makeParentDirIfNecessary(dir string) {
+func makeParentDirIfNecessary(dir string) error {
 	parent, _ := path.Split(dir)
-	os.MkdirAll(parent, 0755)
+	return os.MkdirAll(parent, 0755)
 }
 
 // CreateIndex takes the sorted list of posts and generates HTML output listing
@@ -134,4 +135,12 @@ func getTemplate(name string) (*template.Template, error) {
 	}
 
 	return tpl, nil
+}
+
+// createRedirectFile creates a file index.html at |at| that redirects up
+// |depth| levels.
+func createRedirectFile(at string, depth int) error {
+	url := strings.Repeat("../", depth)
+	fmt.Sprintf(`<html><head meta="http-equiv" value="%s/></html>`, url)
+	return nil
 }
