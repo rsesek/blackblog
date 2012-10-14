@@ -124,7 +124,7 @@ func writeRenderTree(dest string, root *render) error {
 				return err
 			}
 			createRedirectFile(p, func() (depth int) {
-				for n := render; n != nil; n = n.parent {
+				for n := render; n.parent != nil; n = n.parent {
 					depth++
 				}
 				return

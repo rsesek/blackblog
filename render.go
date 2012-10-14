@@ -141,6 +141,12 @@ func getTemplate(name string) (*template.Template, error) {
 // |depth| levels.
 func createRedirectFile(at string, depth int) error {
 	url := strings.Repeat("../", depth)
-	fmt.Sprintf(`<html><head meta="http-equiv" value="%s/></html>`, url)
+	content := fmt.Sprintf(`<html><head><meta http-equiv="refresh" content="0;url=%s"></head></html>`, url)
+	f, err := os.Create(path.Join(at, "index.html"))
+	if err != nil {
+		return err
+	}
+	fmt.Fprint(f, content)
+	f.Close()
 	return nil
 }
