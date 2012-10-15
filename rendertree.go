@@ -184,3 +184,24 @@ func writeRenderTree(dest string, root *render) error {
 
 	return nil
 }
+
+func visitPosts(root *render) <-chan *Post {
+	c := make(chan *Post)
+
+	var visitor func(*render)
+	visitor = func(render *render) {
+		for _, child := range render.object.(renderTree) {
+			if child.t == renderTypeDirectory {
+				visitor(child)
+			} else if child.t == renderTypePost {
+				c <- child.object.(*Post)
+			}
+		}
+	}
+
+	go func() {
+		visitor(root)
+		close(c)
+	}()
+	return c
+}
