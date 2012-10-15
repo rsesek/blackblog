@@ -68,19 +68,19 @@ func (p *Post) Open() (*os.File, error) {
 // file on disk.
 func (p *Post) IsUpToDate() bool {
 	file, err := p.Open()
-	defer file.Close()
 	if err != nil {
 		return false
 	}
+	defer file.Close()
 	return p.isUpToDateInternal(file)
 }
 
 func (p *Post) isUpToDateInternal(file *os.File) bool {
 	fd, err := p.Open()
-	defer fd.Close()
 	if err != nil {
 		return false
 	}
+	defer fd.Close()
 
 	return bytes.Equal(p.checksum, computeChecksum(fd))
 }
@@ -94,10 +94,10 @@ func computeChecksum(file *os.File) []byte {
 // GetContents returns the Markdown content of a post, excluding metadata.
 func (p *Post) GetContents() ([]byte, error) {
 	file, err := p.Open()
-	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	var result []byte
 	wasPrefix := false
@@ -132,10 +132,10 @@ func (p *Post) GetContents() ([]byte, error) {
 // UpdateMetadata re-reads the file on disk and updates the in-memory metadata.
 func (p *Post) UpdateMetadata() {
 	file, err := p.Open()
-	defer file.Close()
 	if err != nil || p.isUpToDateInternal(file) {
 		return
 	}
+	defer file.Close()
 	p.checksum = computeChecksum(file)
 
 	file.Seek(0, 0)

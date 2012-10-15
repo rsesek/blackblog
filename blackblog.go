@@ -72,11 +72,11 @@ func main() {
 		makeParentDirIfNecessary(filePath)
 
 		fd, err := os.Create(filePath)
-		defer fd.Close()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating output file: %v\n", err)
 			continue
 		}
+		defer fd.Close()
 		fd.Write(html)
 	}
 
@@ -87,10 +87,10 @@ func main() {
 // any Markdown (.md) files and returns the corresponding Post objects.
 func GetPostsInDirectory(dirPath string) []*Post {
 	fd, err := os.Open(dirPath)
-	defer fd.Close()
 	if err != nil {
 		return nil
 	}
+	defer fd.Close()
 
 	files, err := fd.Readdir(-1)
 	if err != nil {
@@ -187,10 +187,10 @@ func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
 	tpl.Execute(buf, map[string]interface{}{"Posts": posts})
 
 	fd, err := os.Create(filepath)
-	defer fd.Close()
 	if err != nil {
 		return
 	}
+	defer fd.Close()
 
 	content, err := wrapPage(buf.Bytes(), map[string]string{
 		"Title":    "Posts",
