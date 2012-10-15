@@ -28,7 +28,6 @@ import (
 
 var (
 	flagSource    = flag.String("root", "", "The root directory of all Markdown posts")
-	flagPort      = flag.String("port", "", "The port to bind to for running the standalone HTTP server")
 	flagDest      = flag.String("dest", "", "The output directory for running in comiple mode")
 	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
 )
@@ -41,17 +40,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *flagPort == "" && *flagDest == "" {
+	if !RunAsServer() && *flagDest == "" {
 		fmt.Fprintf(os.Stderr, "No -port or -dest flag specified\n")
 		os.Exit(2)
 	}
 
-	if *flagPort != "" {
-		fmt.Fprintf(os.Stderr, "** SERVER NOT IMPLEMENTED **\n")
-		os.Exit(-1)
+	posts := GetPostsInDirectory(*flagSource)
+
+	if RunAsServer() {
+		if err := StartBlogServer(posts); err != nil {
+			fmt.Fprint(os.Stderr, "Could not start blog server:", err)
+			os.Exit(3)
+		}
 	}
 
-	posts := GetPostsInDirectory(*flagSource)
 	postMap, sortList := SortPosts(posts)
 
 	renderTree, err := createRenderTree(posts)
