@@ -37,7 +37,8 @@ func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	url := strings.Trim(req.URL.Path, "/")
 
 	if url == "" {
-		fmt.Fprintf(rw, "%v\n", b.r)
+		serveNode(rw, req, b.r)
+		return
 	}
 
 	parts := strings.Split(url, "/")
@@ -51,10 +52,10 @@ func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	serveNode(rw, node)
+	serveNode(rw, req, node)
 }
 
-func serveNode(rw http.ResponseWriter, render *render) {
+func serveNode(rw http.ResponseWriter, req *http.Request, render *render) {
 	switch render.t {
 	case renderTypePost:
 		post := render.object.(*Post)
@@ -66,6 +67,22 @@ func serveNode(rw http.ResponseWriter, render *render) {
 		}
 		content := RenderPost(post, data)
 		rw.Write(content)
+	case renderTypeRedirect:
+		fallthrough
+	case renderTypeDirectory:
+		// The root element should generate a post list.
+		if render.t == renderTypeDirectory && render.parent == nil {
+			fmt.Fprint(rw, "Need to implmenet post list for HTTP server :(")
+			return
+		}
+
+		// Other directories when accessed directly should fallback to the
+		// redirect.
+		if render.t == renderTypeDirectory {
+			render = render.object.(renderTree)["index.html"]
+		}
+
+		http.Redirect(rw, req, render.object.(string), http.StatusMovedPermanently)
 	default:
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(rw, "Unknown render: %v", render)
