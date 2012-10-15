@@ -44,6 +44,23 @@ type render struct {
 	parent *render
 }
 
+func (r *render) String() string {
+	var t string
+	switch r.t {
+	case renderTypeInvalid:
+		t = "Invalid"
+	case renderTypePost:
+		t = "Post"
+	case renderTypeDirectory:
+		t = "Dir"
+	case renderTypeRedirect:
+		t = "Redirect"
+	default:
+		t = "???"
+	}
+	return fmt.Sprintf("render%s(%p){%v %p}", t, r, r.object, r.parent)
+}
+
 // createRenderTree takes a slice of posts and returns the root node of the
 // renderTree.
 func createRenderTree(posts []*Post) (*render, error) {
