@@ -18,10 +18,11 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
-	"errors"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -33,7 +34,42 @@ type blogServer struct {
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(rw, "%v\n", b.r)
+	url := strings.Trim(req.URL.Path, "/")
+
+	if url == "" {
+		fmt.Fprintf(rw, "%v\n", b.r)
+	}
+
+	parts := strings.Split(url, "/")
+	node := b.r
+	for _, part := range parts {
+		if child, ok := node.object.(renderTree)[part]; ok {
+			node = child
+		} else {
+			http.NotFound(rw, req)
+			return
+		}
+	}
+
+	serveNode(rw, node)
+}
+
+func serveNode(rw http.ResponseWriter, render *render) {
+	switch render.t {
+	case renderTypePost:
+		post := render.object.(*Post)
+		data, err := post.GetContents()
+		if err != nil {
+			rw.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(rw, err.Error())
+			return
+		}
+		content := RenderPost(post, data)
+		rw.Write(content)
+	default:
+		rw.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(rw, "Unknown render: %v", render)
+	}
 }
 
 func RunAsServer() bool {
@@ -50,7 +86,7 @@ func StartBlogServer(posts []*Post) error {
 		return err
 	}
 
-	fmt.Printf("Starting blog server on port %d", *serverPort)
+	fmt.Printf("Starting blog server on port %d\n", *serverPort)
 	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), &blogServer{root})
 }
 
