@@ -137,11 +137,15 @@ func getTemplate(name string) (*template.Template, error) {
 	return tpl, nil
 }
 
+func generateRedirect(url string) string {
+	return fmt.Sprintf(`<html><head><meta http-equiv="refresh" content="0;url=%s"></head></html>`, url)
+}
+
 // createRedirectFile creates a file index.html at |at| that redirects up
 // |depth| levels.
 func createRedirectFile(at string, depth int) error {
 	url := strings.Repeat("../", depth)
-	content := fmt.Sprintf(`<html><head><meta http-equiv="refresh" content="0;url=%s"></head></html>`, url)
+	content := generateRedirect(url)
 	f, err := os.Create(path.Join(at, "index.html"))
 	if err != nil {
 		return err

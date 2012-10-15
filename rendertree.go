@@ -30,6 +30,7 @@ const (
 	renderTypeInvalid   renderType = iota // Invalid render type.
 	renderTypePost                        // A Post object.
 	renderTypeDirectory                   // A renderTree.
+	renderTypeRedirect                    // Link back to the root.
 )
 
 // A renderTree maps a URL fragment to a render object for the current level in
@@ -99,6 +100,17 @@ func findOrCreateDirNode(url string, root *render) (*render, error) {
 				parent: node,
 			}
 			node = rt[part]
+
+			// Since this is a subdirectory, accessing index.html should go up
+			// to the root. Attach the new render to the newly created directory.
+			link := ""
+			for ln := node; ln.parent != nil; ln = ln.parent {
+				link += "../"
+			}
+			node.object.(renderTree)["index.html"] = &render{
+				t:      renderTypeRedirect,
+				object: link,
+			}
 		}
 	}
 
