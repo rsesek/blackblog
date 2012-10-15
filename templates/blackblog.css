@@ -1,0 +1,18 @@
+/* Default style for blackblog. */
+
+body {
+  background-color: #111;
+  color: #EFEFEF;
+  font-family: "Chivo", serif, "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+
+#wrap {
+  width: 80%;
+  margin: 0 auto;
+}
+
+h1#header {
+  font-style: italic;
+  text-align: center;
+  border-bottom: 1px solid #BBB;
+}
