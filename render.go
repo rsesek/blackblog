@@ -23,7 +23,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"text/template"
 
 	"github.com/russross/blackfriday"
@@ -139,18 +138,4 @@ func getTemplate(name string) (*template.Template, error) {
 
 func generateRedirect(url string) string {
 	return fmt.Sprintf(`<html><head><meta http-equiv="refresh" content="0;url=%s"></head></html>`, url)
-}
-
-// createRedirectFile creates a file index.html at |at| that redirects up
-// |depth| levels.
-func createRedirectFile(at string, depth int) error {
-	url := strings.Repeat("../", depth)
-	content := generateRedirect(url)
-	f, err := os.Create(path.Join(at, "index.html"))
-	if err != nil {
-		return err
-	}
-	fmt.Fprint(f, content)
-	f.Close()
-	return nil
 }

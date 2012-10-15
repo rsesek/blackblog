@@ -151,12 +151,6 @@ func writeRenderTree(dest string, root *render) error {
 			if err := os.Mkdir(p, 0755); err != nil && !os.IsExist(err) {
 				return err
 			}
-			createRedirectFile(p, func() (depth int) {
-				for n := render; n.parent != nil; n = n.parent {
-					depth++
-				}
-				return
-			}())
 			// Recurse on its subnodes.
 			if err := writeRenderTree(p, render); err != nil {
 				return err
@@ -175,6 +169,13 @@ func writeRenderTree(dest string, root *render) error {
 				return err
 			}
 			f.Write(html)
+			f.Close()
+		case renderTypeRedirect:
+			f, err := os.Create(p)
+			if err != nil {
+				return err
+			}
+			fmt.Fprint(f, generateRedirect(render.object.(string)))
 			f.Close()
 		default:
 			return fmt.Errorf("writeRenderTree for %q: unknown renderType %v", p, render.t)
