@@ -1,9 +1,15 @@
 /* Default style for blackblog. */
 
+* {
+  margin: 0;
+  padding: 0;
+}
+
 body {
   background-color: #111;
   color: #EFEFEF;
   font-family: "Chivo", serif, "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-size: 13pt;
 }
 
 a {
@@ -24,4 +30,22 @@ h1#header {
   text-align: center;
   border-bottom: 1px solid #BBB;
   color: #EFEFEF;
+  margin: 13pt 0;
+}
+
+h1 {
+  margin: 18pt 0;
+  font-size: 26pt;
+}
+
+p {
+  margin: 13pt 0;
+}
+
+#post-date {
+  float: right;
+  font-weight: normal;
+  font-style: italic;
+  font-size: 16pt;
+  line-height: 26pt;
 }
