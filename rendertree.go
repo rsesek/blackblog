@@ -144,7 +144,8 @@ func writeRenderTree(dest string, root *render) error {
 	// Iterate over this renderTree's subnodes.
 	for part, render := range root.object.(renderTree) {
 		p := path.Join(dest, part)
-		if render.t == renderTypeDirectory {
+		switch render.t {
+		case renderTypeDirectory:
 			// For directories, ensure that the parent directory exists. If it
 			// does not, create it and add a redirect index.html file.
 			if err := os.Mkdir(p, 0755); err != nil && !os.IsExist(err) {
@@ -157,8 +158,10 @@ func writeRenderTree(dest string, root *render) error {
 				return
 			}())
 			// Recurse on its subnodes.
-			writeRenderTree(p, render)
-		} else if render.t == renderTypePost {
+			if err := writeRenderTree(p, render); err != nil {
+				return err
+			}
+		case renderTypePost:
 			// For posts, just render the content into the template.
 			post := render.object.(*Post)
 			content, err := post.GetContents()
@@ -173,6 +176,8 @@ func writeRenderTree(dest string, root *render) error {
 			}
 			f.Write(html)
 			f.Close()
+		default:
+			return fmt.Errorf("writeRenderTree for %q: unknown renderType %v", p, render.t)
 		}
 	}
 
