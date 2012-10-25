@@ -42,6 +42,23 @@ p {
   margin: 13pt 0;
 }
 
+#posts-list li {
+  padding: 2pt;
+  margin: 5pt 0;
+
+  list-style-type: none;
+
+  font-size: 14pt;
+}
+
+#posts-list li:before {
+  content: "\25B8 \0020"
+}
+
+#posts-list li .date {
+  color: #8FDFF0;
+}
+
 #post-date {
   float: right;
   font-weight: normal;

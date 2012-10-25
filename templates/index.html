@@ -18,12 +18,12 @@
 
 <h1>Posts</h1>
 
-<ul>
+<ul id="posts-list">
 {{range $_, $post := .Posts}}
   <li>
     <a href="{{.URL}}">
-      {{if .Date}}<span class="date">{{.Date}}</span>{{end}}
       <span class="title">{{.Title}}</span>
+      {{if .Date}}&mdash; <span class="date">{{.Date}}</span>{{end}}
     </a>
   </li>
 {{end}}
