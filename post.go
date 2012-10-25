@@ -218,3 +218,19 @@ func parseDate(input string) time.Time {
 
 	return time.Time{}
 }
+
+// sort.Interface implementation:
+
+type PostList []*Post
+
+func (pl PostList) Len() int {
+	return len(pl)
+}
+
+func (pl PostList) Less(i, j int) bool {
+	return pl[i].CreateURL() < pl[j].CreateURL()
+}
+
+func (pl PostList) Swap(i, j int) {
+	pl[i], pl[j] = pl[j], pl[i]
+}

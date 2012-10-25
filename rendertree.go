@@ -63,7 +63,7 @@ func (r *render) String() string {
 
 // createRenderTree takes a slice of posts and returns the root node of the
 // renderTree.
-func createRenderTree(posts []*Post) (*render, error) {
+func createRenderTree(posts PostList) (*render, error) {
 	root := &render{
 		t:      renderTypeDirectory,
 		object: make(renderTree),
