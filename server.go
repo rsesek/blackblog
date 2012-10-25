@@ -116,9 +116,3 @@ func StartBlogServer(posts PostList) error {
 		r:     root,
 	})
 }
-
-func newBlogServer(r *render) http.Handler {
-	return &blogServer{
-		r: r,
-	}
-}
