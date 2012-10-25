@@ -18,6 +18,7 @@
 package main
 
 import (
+	"sort"
 	"testing"
 )
 
@@ -35,7 +36,7 @@ func TestGetPostsInDir(t *testing.T) {
 }
 
 func TestSortedPosts(t *testing.T) {
-	posts := []*Post{
+	posts := PostList{
 		&Post{URLFragment: "alpha"},
 		&Post{URLFragment: "b_test", Date: "6 January 2012"},
 		&Post{URLFragment: "c_test", Date: "18 January 2012"},
@@ -48,26 +49,19 @@ func TestSortedPosts(t *testing.T) {
 		"alpha.html",
 	}
 
-	postMap, sorted := SortPosts(posts)
-	if len(posts) != len(postMap) || len(postMap) != len(sorted) {
-		t.Errorf("Count of returned values mismatch, expected %d, got len(map) = %d, len(slice) = %d", len(posts), len(postMap), len(sorted))
-	}
+	sort.Sort(posts)
 
 	for i, expected := range order {
-		if expected != sorted[i] {
-			t.Errorf("Sorted order mismatch. At %d, expected '%s', got '%s'", i, expected, sorted[i])
-		}
-		post, ok := postMap[expected]
-		if !ok || post == nil {
-			t.Errorf("Error getting post in map for '%s'", expected)
+		if expected != posts[i].CreateURL() {
+			t.Errorf("Sorted order mismatch. At %d, expected '%s', got '%s'", i, expected, posts[i].CreateURL())
 		}
 	}
 }
 
 func TestGetRootPath(t *testing.T) {
-	results := map[string]string {
+	results := map[string]string{
 		"2012/1/test.html": "../../",
-		"index.html": "",
+		"index.html":       "",
 	}
 
 	for k, v := range results {
