@@ -46,16 +46,19 @@ func RenderPost(post *Post, input []byte) []byte {
 			""),
 		0)
 
-	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, map[string]interface{}{
-		"Post":    post,
-		"Content": string(content),
-	})
+	params := PostPageParams{
+		Post:    post,
+		Content: string(content),
+		PageParams: PageParams{
+			Title:    post.Title,
+			RootPath: getRootPath(post.CreateURL()),
+		},
+	}
 
-	result, err := wrapPage(buf.Bytes(), PageParams{
-		Title:    post.Title,
-		RootPath: getRootPath(post.CreateURL()),
-	})
+	buf := bytes.NewBuffer([]byte{})
+	tpl.Execute(buf, params)
+
+	result, err := wrapPage(buf.Bytes(), params.PageParams)
 	return result
 }
 
@@ -103,6 +106,13 @@ type PageParams struct {
 type IndexPageParams struct {
 	PageParams
 	Posts PostList
+}
+
+// PostPageParams is used for displaying a rendered post.
+type PostPageParams struct {
+	PageParams
+	Post    *Post
+	Content string // The HTML content rendered from (*Post).GetContents() markdown original.
 }
 
 func wrapPage(content []byte, vars PageParams) ([]byte, error) {
