@@ -30,14 +30,15 @@ var (
 )
 
 type blogServer struct {
-	r *render
+	posts PostList
+	r     *render
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	url := strings.Trim(req.URL.Path, "/")
 
 	if url == "" {
-		serveNode(rw, req, b.r)
+		b.serveNode(rw, req, b.r)
 		return
 	}
 
@@ -52,10 +53,10 @@ func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	serveNode(rw, req, node)
+	b.serveNode(rw, req, node)
 }
 
-func serveNode(rw http.ResponseWriter, req *http.Request, render *render) {
+func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render *render) {
 	switch render.t {
 	case renderTypePost:
 		post := render.object.(*Post)
@@ -72,7 +73,13 @@ func serveNode(rw http.ResponseWriter, req *http.Request, render *render) {
 	case renderTypeDirectory:
 		// The root element should generate a post list.
 		if render.t == renderTypeDirectory && render.parent == nil {
-			fmt.Fprint(rw, "Need to implmenet post list for HTTP server :(")
+			index, err := CreateIndex(b.posts)
+			if err != nil {
+				rw.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprint(rw, err.Error())
+				return
+			}
+			rw.Write(index)
 			return
 		}
 
@@ -93,7 +100,7 @@ func RunAsServer() bool {
 	return *serverPort != 0
 }
 
-func StartBlogServer(posts []*Post) error {
+func StartBlogServer(posts PostList) error {
 	if !RunAsServer() {
 		return errors.New("No --port specified to start the server")
 	}
@@ -104,7 +111,10 @@ func StartBlogServer(posts []*Post) error {
 	}
 
 	fmt.Printf("Starting blog server on port %d\n", *serverPort)
-	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), &blogServer{root})
+	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), &blogServer{
+		posts: posts,
+		r:     root,
+	})
 }
 
 func newBlogServer(r *render) http.Handler {
