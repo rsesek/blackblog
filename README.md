@@ -18,8 +18,8 @@ not yet feature complete.
 
 ## Installation
 
-    $ goinstall github.com/russross/blackfriday
-    $ goinstall github.com/rsesek/blackblog
+    $ go get github.com/russross/blackfriday
+    $ go get github.com/rsesek/blackblog
 
     $ mkdir my_new_blog
     $ cd my_new_blog

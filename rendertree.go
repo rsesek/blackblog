@@ -63,7 +63,7 @@ func (r *render) String() string {
 
 // createRenderTree takes a slice of posts and returns the root node of the
 // renderTree.
-func createRenderTree(posts []*Post) (*render, error) {
+func createRenderTree(posts PostList) (*render, error) {
 	root := &render{
 		t:      renderTypeDirectory,
 		object: make(renderTree),
@@ -183,4 +183,25 @@ func writeRenderTree(dest string, root *render) error {
 	}
 
 	return nil
+}
+
+func visitPosts(root *render) <-chan *Post {
+	c := make(chan *Post)
+
+	var visitor func(*render)
+	visitor = func(render *render) {
+		for _, child := range render.object.(renderTree) {
+			if child.t == renderTypeDirectory {
+				visitor(child)
+			} else if child.t == renderTypePost {
+				c <- child.object.(*Post)
+			}
+		}
+	}
+
+	go func() {
+		visitor(root)
+		close(c)
+	}()
+	return c
 }

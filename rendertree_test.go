@@ -113,3 +113,56 @@ func TestTwoDirs(t *testing.T) {
 		t.Errorf("Post should equal %v, got %v", post, testPost)
 	}
 }
+
+func TestVisitor(t *testing.T) {
+	root := &render{
+		t: renderTypeDirectory,
+		object: renderTree{
+			"a": &render{
+				t:      renderTypePost,
+				object: &Post{Title: "First"},
+			},
+			"b": &render{
+				t:      renderTypePost,
+				object: &Post{Title: "Second"},
+			},
+			"c": &render{
+				t: renderTypeDirectory,
+				object: renderTree{
+					"d": &render{t: renderTypeRedirect},
+					"e": &render{
+						t:      renderTypePost,
+						object: &Post{Title: "Third"},
+					},
+					"f": &render{
+						t: renderTypeDirectory,
+						object: renderTree{
+							"g": &render{
+								t:      renderTypePost,
+								object: &Post{Title: "Fourth"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	expectation := map[string]bool{
+		"First":  false,
+		"Second": false,
+		"Third":  false,
+		"Fourth": false,
+	}
+
+	c := visitPosts(root)
+	for p := range c {
+		expectation[p.Title] = true
+	}
+
+	for k, v := range expectation {
+		if !v {
+			t.Errorf("Did not visit post with title %q", k)
+		}
+	}
+}

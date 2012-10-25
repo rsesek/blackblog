@@ -14,7 +14,7 @@
 <ul>
 {{range $_, $post := .Posts}}
   <li>
-    <a href="{{.URL}}">
+    <a href="{{.CreateURL}}">
       {{if .Date}}<span class="date">{{.Date}}</span>{{end}}
       <span class="title">{{.Title}}</span>
     </a>
