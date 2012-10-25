@@ -23,8 +23,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"text/template"
 	"sort"
+	"text/template"
 
 	"github.com/russross/blackfriday"
 )
@@ -52,9 +52,9 @@ func RenderPost(post *Post, input []byte) []byte {
 		"Content": string(content),
 	})
 
-	result, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title":    post.Title,
-		"RootPath": getRootPath(post.CreateURL()),
+	result, err := wrapPage(buf.Bytes(), PageParams{
+		Title:    post.Title,
+		RootPath: getRootPath(post.CreateURL()),
 	})
 	return result
 }
@@ -74,20 +74,38 @@ func CreateIndex(posts PostList) ([]byte, error) {
 
 	sort.Sort(posts)
 
+	params := IndexPageParams{
+		Posts:      posts,
+		PageParams: PageParams{Title: "Posts"},
+	}
+
 	buf := bytes.NewBuffer([]byte{})
-	err = tpl.Execute(buf, struct{Posts PostList}{posts})
+	err = tpl.Execute(buf, params)
 	if err != nil {
 		return nil, err
 	}
 
-	content, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title":    "Posts",
-		"RootPath": "",
-	})
+	content, err := wrapPage(buf.Bytes(), params.PageParams)
 	return content, nil
 }
 
-func wrapPage(content []byte, vars interface{}) ([]byte, error) {
+// PageParams contains the varaibles passed to the basic header/footer
+// page templates.
+type PageParams struct {
+	// The title of the blog post.
+	Title string
+
+	// Relative path linking up to the root of the blog.
+	RootPath string
+}
+
+// IndexPageParams is used to render out the blog post list page.
+type IndexPageParams struct {
+	PageParams
+	Posts PostList
+}
+
+func wrapPage(content []byte, vars PageParams) ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{})
 
 	header, err := getTemplate("header")
