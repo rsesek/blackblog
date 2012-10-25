@@ -72,7 +72,7 @@ func TestFullMetadata(t *testing.T) {
 		t.Errorf("post.URLFragment mismatch, expected '%s', got '%s'", expected, post.URLFragment)
 	}
 
-	expected = "24 Jan 2012"
+	expected = "24 January 2012"
 	if post.Date != expected {
 		t.Errorf("post.Date mismatch, expected '%s', got '%s'", expected, post.Date)
 	}

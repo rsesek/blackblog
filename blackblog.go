@@ -18,17 +18,11 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
-	"sort"
 	"strings"
-	"text/template"
-
-	"github.com/russross/blackfriday"
 )
 
 var (
@@ -57,30 +51,29 @@ func main() {
 	}
 
 	posts := GetPostsInDirectory(*flagSource)
-	postMap, sortList := SortPosts(posts)
-	for _, url := range sortList {
-		post := postMap[url]
-		filePath := path.Join(*flagDest, url)
 
-		source, err := post.GetContents()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading post at %s: %v\n", post.Filename, err)
-			continue
-		}
-
-		html := RenderPost(post, source)
-		makeParentDirIfNecessary(filePath)
-
-		fd, err := os.Create(filePath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating output file: %v\n", err)
-			continue
-		}
-		defer fd.Close()
-		fd.Write(html)
+	renderTree, err := createRenderTree(posts)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "createRenderTree: %v\n", err)
+		os.Exit(3)
 	}
 
-	CreateIndex(path.Join(*flagDest, "index.html"), postMap, sortList)
+	if err := writeRenderTree(*flagDest, renderTree); err != nil {
+		fmt.Fprintf(os.Stderr, "writeRenderTree: %v\n", err)
+		os.Exit(3)
+	}
+
+	index, err := CreateIndex(posts)
+	var f *os.File
+	if err == nil {
+		f, err = os.Create(path.Join(*flagDest, "index.html"))
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "writing index: %v\n", err)
+		os.Exit(3)
+	}
+	defer f.Close()
+	f.Write(index)
 }
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
@@ -113,130 +106,6 @@ func GetPostsInDirectory(dirPath string) []*Post {
 	}
 
 	return results
-}
-
-// PostURLMap keys Post objects by their final URL.
-type PostURLMap map[string]*Post
-
-// SortPosts creates URLs for each Post and returns a map that links the URL to
-// the post and a slice of the URLs in sorted order.
-func SortPosts(posts []*Post) (postMap PostURLMap, sorted []string) {
-	postMap = make(PostURLMap, len(posts))
-	for _, post := range posts {
-		url := post.CreateURL()
-		postMap[url] = post
-		sorted = append(sorted, url)
-	}
-	sort.Strings(sorted)
-	return
-}
-
-// RenderPost runs the input source through the blackfriday library.
-func RenderPost(post *Post, input []byte) []byte {
-	tpl, err := getTemplate("post")
-	if err != nil {
-		return nil
-	}
-
-	content := blackfriday.Markdown(
-		input,
-		blackfriday.HtmlRenderer(
-			blackfriday.HTML_USE_SMARTYPANTS|
-				blackfriday.HTML_USE_XHTML|
-				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
-			"",
-			""),
-		0)
-
-	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, map[string]interface{}{
-		"Post":    post,
-		"Content": string(content),
-	})
-
-	result, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title":    post.Title,
-		"RootPath": getRootPath(post.CreateURL()),
-	})
-	return result
-}
-
-func makeParentDirIfNecessary(dir string) {
-	parent, _ := path.Split(dir)
-	os.MkdirAll(parent, 0755)
-}
-
-// CreateIndex takes the sorted list of posts and generates HTML output listing
-// each one.
-func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
-	tpl, err := getTemplate("index")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
-	}
-
-	posts := make([]map[string]string, len(sortOrder))
-	for i, url := range sortOrder {
-		posts[i] = map[string]string{
-			"URL":   url,
-			"Date":  postMap[url].Date,
-			"Title": postMap[url].Title,
-		}
-	}
-
-	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, map[string]interface{}{"Posts": posts})
-
-	fd, err := os.Create(filepath)
-	if err != nil {
-		return
-	}
-	defer fd.Close()
-
-	content, err := wrapPage(buf.Bytes(), map[string]string{
-		"Title":    "Posts",
-		"RootPath": "",
-	})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
-		return
-	}
-	fd.Write(content)
-}
-
-func wrapPage(content []byte, vars interface{}) ([]byte, error) {
-	buf := bytes.NewBuffer([]byte{})
-
-	header, err := getTemplate("header")
-	if err != nil {
-		return nil, err
-	}
-
-	footer, err := getTemplate("footer")
-	if err != nil {
-		return nil, err
-	}
-
-	header.Execute(buf, vars)
-	buf.Write(content)
-	footer.Execute(buf, vars)
-
-	return buf.Bytes(), nil
-}
-
-func getTemplate(name string) (*template.Template, error) {
-	name = path.Join(*flagTemplates, name+".html")
-	file, err := ioutil.ReadFile(name)
-	if err != nil {
-		return nil, err
-	}
-
-	tpl := template.New(name)
-	_, err = tpl.Parse(string(file))
-	if err != nil {
-		return nil, err
-	}
-
-	return tpl, nil
 }
 
 func getRootPath(name string) string {
