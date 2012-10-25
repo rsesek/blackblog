@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"sort"
 	"strings"
 )
 
@@ -52,7 +51,6 @@ func main() {
 	}
 
 	posts := GetPostsInDirectory(*flagSource)
-	postMap, sortList := SortPosts(posts)
 
 	renderTree, err := createRenderTree(posts)
 	if err != nil {
@@ -64,7 +62,18 @@ func main() {
 		fmt.Fprintf(os.Stderr, "writeRenderTree: %v\n", err)
 		os.Exit(3)
 	}
-	CreateIndex(path.Join(*flagDest, "index.html"), postMap, sortList)
+
+	index, err := CreateIndex(posts)
+	var f *os.File
+	if err == nil {
+		f, err = os.Create(path.Join(*flagDest, "index.html"))
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "writing index: %v\n", err)
+		os.Exit(3)
+	}
+	defer f.Close()
+	f.Write(index)
 }
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
@@ -97,22 +106,6 @@ func GetPostsInDirectory(dirPath string) []*Post {
 	}
 
 	return results
-}
-
-// PostURLMap keys Post objects by their final URL.
-type PostURLMap map[string]*Post
-
-// SortPosts creates URLs for each Post and returns a map that links the URL to
-// the post and a slice of the URLs in sorted order.
-func SortPosts(posts []*Post) (postMap PostURLMap, sorted []string) {
-	postMap = make(PostURLMap, len(posts))
-	for _, post := range posts {
-		url := post.CreateURL()
-		postMap[url] = post
-		sorted = append(sorted, url)
-	}
-	sort.Strings(sorted)
-	return
 }
 
 func getRootPath(name string) string {

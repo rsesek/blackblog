@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 	"text/template"
+	"sort"
 
 	"github.com/russross/blackfriday"
 )
@@ -65,39 +66,25 @@ func makeParentDirIfNecessary(dir string) error {
 
 // CreateIndex takes the sorted list of posts and generates HTML output listing
 // each one.
-func CreateIndex(filepath string, postMap PostURLMap, sortOrder []string) {
+func CreateIndex(posts PostList) ([]byte, error) {
 	tpl, err := getTemplate("index")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
+		return nil, err
 	}
 
-	posts := make([]map[string]string, len(sortOrder))
-	for i, url := range sortOrder {
-		posts[i] = map[string]string{
-			"URL":   url,
-			"Date":  postMap[url].Date,
-			"Title": postMap[url].Title,
-		}
-	}
+	sort.Sort(posts)
 
 	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, map[string]interface{}{"Posts": posts})
-
-	fd, err := os.Create(filepath)
-	defer fd.Close()
+	err = tpl.Execute(buf, struct{Posts PostList}{posts})
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	content, err := wrapPage(buf.Bytes(), map[string]string{
 		"Title":    "Posts",
 		"RootPath": "",
 	})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating index.html: %v\n", err)
-		return
-	}
-	fd.Write(content)
+	return content, nil
 }
 
 func wrapPage(content []byte, vars interface{}) ([]byte, error) {
