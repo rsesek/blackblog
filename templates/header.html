@@ -12,8 +12,12 @@
 <html lang="en">
   <head>
     <title>Blog Title - {{.Title}}</title>
-    <!-- StyleSheet: ../{{.RootPath}}css/style.css -->
+    <link href="http://fonts.googleapis.com/css?family=Chivo:400,400italic,900" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" type="text/css" href="../{{.RootPath}}templates/blackblog.css" />
   </head>
 
   <body>
 
+    <div id="wrap">
+      <a href="{{.RootPath}}"><h1 id="header">A Black Blog</h1></a>

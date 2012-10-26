@@ -11,9 +11,9 @@
 
 */}}
 
-<div id="header">
-  <h1 id="title">{{.Post.Title}}</h1>
-  {{if .Post.Date}}<h2 id="date">{{.Post.Date}}</h2>{{end}}
+<div id="post-header">
+  {{if .Post.Date}}<h2 id="post-date">{{.Post.Date}}</h2>{{end}}
+  <h1 id="post-title">{{.Post.Title}}</h1>
 </div>
 
 {{.Content}}
