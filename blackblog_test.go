@@ -23,7 +23,10 @@ import (
 )
 
 func TestGetPostsInDir(t *testing.T) {
-	posts := GetPostsInDirectory("./tests")
+	posts, err := GetPostsInDirectory("./tests")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
 	if len(posts) != 4 {
 		t.Errorf("Expecting %d posts, only got %d", 4, len(posts))
 	}

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -50,7 +51,11 @@ func main() {
 		os.Exit(-1)
 	}
 
-	posts := GetPostsInDirectory(*flagSource)
+	posts, err := GetPostsInDirectory(*flagSource)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "GetPostsInDirectory: %v\n", err)
+		os.Exit(3)
+	}
 
 	renderTree, err := createRenderTree(posts)
 	if err != nil {
@@ -78,34 +83,18 @@ func main() {
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
 // any Markdown (.md) files and returns the corresponding Post objects.
-func GetPostsInDirectory(dirPath string) []*Post {
-	fd, err := os.Open(dirPath)
-	if err != nil {
-		return nil
-	}
-	defer fd.Close()
-
-	files, err := fd.Readdir(-1)
-	if err != nil {
-		return nil
-	}
-
-	var results []*Post
-	for _, file := range files {
-		filePath := path.Join(dirPath, file.Name())
-		if file.IsDir() {
-			subfiles := GetPostsInDirectory(filePath)
-			if subfiles != nil {
-				results = append(results, subfiles...)
-			}
-		} else if strings.HasSuffix(file.Name(), ".md") {
-			if post, err := NewPostFromPath(filePath); post != nil && err == nil {
-				results = append(results, post)
+func GetPostsInDirectory(dirPath string) (posts PostList, err error) {
+	err = filepath.Walk(dirPath, func(file string, info os.FileInfo, err error) error {
+		if !info.IsDir() && strings.HasSuffix(file, ".md") {
+			if post, err := NewPostFromPath(file); post != nil && err == nil {
+				posts = append(posts, post)
+			} else {
+				return err
 			}
 		}
-	}
-
-	return results
+		return nil
+	})
+	return
 }
 
 func getRootPath(name string) string {
