@@ -44,15 +44,14 @@ func main() {
 		os.Exit(2)
 	}
 
-	posts := GetPostsInDirectory(*flagSource)
-
 	if RunAsServer() {
-		if err := StartBlogServer(posts); err != nil {
+		if err := StartBlogServer(*flagSource); err != nil {
 			fmt.Fprint(os.Stderr, "Could not start blog server:", err)
 			os.Exit(3)
 		}
 	}
 
+	posts := GetPostsInDirectory(*flagSource)
 	renderTree, err := createRenderTree(posts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "createRenderTree: %v\n", err)

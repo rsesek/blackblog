@@ -24,13 +24,18 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
 	serverPort = flag.Int("port", 0, "The port on which the standalone HTTP server will run.")
+
+	serverPollWait = flag.Int("server-poll-time", 60, "The time in seconds that the server waits before polling the directory for changes.")
 )
 
 type blogServer struct {
+	root string // Path to the root of the blog.
+
 	mu    *sync.RWMutex
 	posts PostList
 	r     *render
@@ -40,26 +45,31 @@ func RunAsServer() bool {
 	return *serverPort != 0
 }
 
-func StartBlogServer(posts PostList) error {
+func StartBlogServer(blogRoot string) error {
 	if !RunAsServer() {
 		return errors.New("No --port specified to start the server")
 	}
 
-	root, err := createRenderTree(posts)
+	server := &blogServer{
+		root: blogRoot,
+		mu:   new(sync.RWMutex),
+	}
+
+	err := server.buildPosts()
 	if err != nil {
 		return err
 	}
+	go server.pollPostChanges()
 
 	fmt.Printf("Starting blog server on port %d\n", *serverPort)
-	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), &blogServer{
-		mu:    new(sync.RWMutex),
-		posts: posts,
-		r:     root,
-	})
+	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), server)
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	url := strings.Trim(req.URL.Path, "/")
+
+	b.mu.RLock()
+	defer b.mu.RUnlock()
 
 	if url == "" {
 		b.serveNode(rw, req, b.r)
@@ -118,4 +128,41 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(rw, "Unknown render: %v", render)
 	}
+}
+
+func (b *blogServer) pollPostChanges() {
+	for {
+		time.Sleep(time.Duration(*serverPollWait) * time.Second)
+		if err := b.buildPosts(); err != nil {
+			panic(err.Error())
+		}
+	}
+}
+
+func (b *blogServer) buildPosts() (err error) {
+	newPosts := GetPostsInDirectory(b.root)
+
+	b.mu.RLock()
+	rebuild := len(newPosts) != len(b.posts)
+	if !rebuild {
+		for _, p := range b.posts {
+			if !p.IsUpToDate() {
+				rebuild = true
+				break
+			}
+		}
+	}
+	b.mu.RUnlock()
+
+	if rebuild {
+		b.mu.Lock()
+		defer b.mu.Unlock()
+
+		b.posts = GetPostsInDirectory(b.root)
+		b.r, err = createRenderTree(b.posts)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
