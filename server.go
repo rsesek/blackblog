@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 var (
@@ -30,8 +31,31 @@ var (
 )
 
 type blogServer struct {
+	mu    *sync.RWMutex
 	posts PostList
 	r     *render
+}
+
+func RunAsServer() bool {
+	return *serverPort != 0
+}
+
+func StartBlogServer(posts PostList) error {
+	if !RunAsServer() {
+		return errors.New("No --port specified to start the server")
+	}
+
+	root, err := createRenderTree(posts)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Starting blog server on port %d\n", *serverPort)
+	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), &blogServer{
+		mu:    new(sync.RWMutex),
+		posts: posts,
+		r:     root,
+	})
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
@@ -94,25 +118,4 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(rw, "Unknown render: %v", render)
 	}
-}
-
-func RunAsServer() bool {
-	return *serverPort != 0
-}
-
-func StartBlogServer(posts PostList) error {
-	if !RunAsServer() {
-		return errors.New("No --port specified to start the server")
-	}
-
-	root, err := createRenderTree(posts)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Starting blog server on port %d\n", *serverPort)
-	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), &blogServer{
-		posts: posts,
-		r:     root,
-	})
 }
