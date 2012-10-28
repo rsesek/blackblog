@@ -100,10 +100,9 @@ func (p *Post) GetContents() ([]byte, error) {
 	defer file.Close()
 
 	var result []byte
-	wasPrefix := false
 	reader := bufio.NewReader(file)
 	for {
-		line, isPrefix, err := reader.ReadLine()
+		line, err := reader.ReadString('\n')
 
 		// If an error occurred, return the error except for EOF.
 		if err != nil {
@@ -114,13 +113,8 @@ func (p *Post) GetContents() ([]byte, error) {
 		}
 
 		// Skip lines that are for metadata.
-		if wasPrefix || len(line) >= 2 && string(line[0:2]) == "~~" {
-			wasPrefix = isPrefix
+		if len(line) >= 2 && string(line[0:2]) == "~~" {
 			continue
-		}
-
-		if !isPrefix {
-			line = append(line, '\n')
 		}
 
 		// Store the rest of the file.
