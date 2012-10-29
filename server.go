@@ -41,10 +41,13 @@ type blogServer struct {
 	r     *render
 }
 
+// RunAsServer checks if the program has been configured to run as a web server.
 func RunAsServer() bool {
 	return *serverPort != 0
 }
 
+// StartBlogServer runs the program's web server given the blog located
+// at |blogRoot|.
 func StartBlogServer(blogRoot string) error {
 	if !RunAsServer() {
 		return errors.New("No --port specified to start the server")
