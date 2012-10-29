@@ -210,7 +210,7 @@ func visitPosts(root *render) <-chan *Post {
 // nodeDepth returns the number of edges between the given render |r| and its
 // root.
 func nodeDepth(r *render) (i int) {
-	for ; r.parent != nil; r= r.parent {
+	for ; r.parent != nil; r = r.parent {
 		i++
 	}
 	return
