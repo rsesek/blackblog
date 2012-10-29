@@ -54,6 +54,9 @@ func TestRootTree(t *testing.T) {
 		if v.object != one {
 			t.Errorf("Single value should be %v, got %v", one, v)
 		}
+		if v.parent != root {
+			t.Errorf("Single value parent should be %v, got %v", root, v.parent)
+		}
 	}
 }
 
@@ -82,6 +85,9 @@ func TestTwoDirs(t *testing.T) {
 	if year.t != renderTypeDirectory {
 		t.Errorf("Year should be a directory, is %v", year.t)
 	}
+	if year.parent != root {
+		t.Errorf("Year should have parent %v, is %v", root, year.parent)
+	}
 	contents, ok = year.object.(renderTree)
 	if !ok {
 		t.Fatalf("Year should be a renderTree, got %v", contents)
@@ -95,6 +101,9 @@ func TestTwoDirs(t *testing.T) {
 	if month.t != renderTypeDirectory {
 		t.Errorf("Month should be a directory, is %v", month.t)
 	}
+	if month.parent != year {
+		t.Errorf("Month should have parent %v, is %v", year, month.parent)
+	}
 	contents, ok = month.object.(renderTree)
 	if !ok {
 		t.Fatalf("Month should be a renderTree, got %v", contents)
@@ -106,6 +115,9 @@ func TestTwoDirs(t *testing.T) {
 	}
 	if postRender.t != renderTypePost {
 		t.Errorf("Test post should be a post, got %v", postRender.t)
+	}
+	if postRender.parent != month {
+		t.Errorf("Test post should have parent %v, is %v", month, postRender.parent)
 	}
 	if testPost, ok := postRender.object.(*Post); !ok {
 		t.Errorf("Test post should be a post, got %v", testPost)

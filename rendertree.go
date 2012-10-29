@@ -89,6 +89,7 @@ func insertPost(post *Post, root *render) error {
 	dir.object.(renderTree)[filename] = &render{
 		t:      renderTypePost,
 		object: post,
+		parent: dir,
 	}
 	return nil
 }
