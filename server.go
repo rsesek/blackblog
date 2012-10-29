@@ -143,7 +143,10 @@ func (b *blogServer) pollPostChanges() {
 }
 
 func (b *blogServer) buildPosts() (err error) {
-	newPosts := GetPostsInDirectory(b.root)
+	newPosts, err := GetPostsInDirectory(b.root)
+	if err != nil {
+		return
+	}
 
 	b.mu.RLock()
 	rebuild := len(newPosts) != len(b.posts)
@@ -161,10 +164,13 @@ func (b *blogServer) buildPosts() (err error) {
 		b.mu.Lock()
 		defer b.mu.Unlock()
 
-		b.posts = GetPostsInDirectory(b.root)
+		b.posts, err = GetPostsInDirectory(b.root)
+		if err != nil {
+			return
+		}
 		b.r, err = createRenderTree(b.posts)
 		if err != nil {
-			return err
+			return
 		}
 	}
 	return nil
