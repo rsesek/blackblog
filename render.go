@@ -30,7 +30,7 @@ import (
 )
 
 // RenderPost runs the input source through the blackfriday library.
-func RenderPost(post *Post, input []byte) []byte {
+func RenderPost(post *Post, input []byte, page PageParams) []byte {
 	tpl, err := getTemplate("post")
 	if err != nil {
 		return nil
@@ -46,13 +46,11 @@ func RenderPost(post *Post, input []byte) []byte {
 			""),
 		0)
 
+	page.Title = post.Title
 	params := PostPageParams{
-		Post:    post,
-		Content: string(content),
-		PageParams: PageParams{
-			Title:    post.Title,
-			RootPath: getRootPath(post.CreateURL()),
-		},
+		Post:       post,
+		Content:    string(content),
+		PageParams: page,
 	}
 
 	buf := bytes.NewBuffer([]byte{})

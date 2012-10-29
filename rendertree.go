@@ -163,7 +163,7 @@ func writeRenderTree(dest string, root *render) error {
 				return err
 			}
 
-			html := RenderPost(post, content)
+			html := RenderPost(post, content, PageParams{RootPath: depthPath(render)})
 			f, err := os.Create(p)
 			if err != nil {
 				return err
@@ -204,4 +204,18 @@ func visitPosts(root *render) <-chan *Post {
 		close(c)
 	}()
 	return c
+}
+
+// nodeDepth returns the number of edges between the given render |r| and its
+// root.
+func nodeDepth(r *render) (i int) {
+	for ; r.parent != nil; r= r.parent {
+		i++
+	}
+	return
+}
+
+// depthPath returns a relative path to the root for a render |r|.
+func depthPath(r *render) string {
+	return strings.Repeat("../", nodeDepth(r))
 }

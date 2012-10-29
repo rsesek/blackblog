@@ -166,3 +166,48 @@ func TestVisitor(t *testing.T) {
 		}
 	}
 }
+
+func TestNodeDepth(t *testing.T) {
+	r := &render{}
+	d := nodeDepth(r)
+
+	if d != 0 {
+		t.Errorf("Node depth for root should be 0, got %d", d)
+	}
+
+	c1 := &render{parent: r}
+	d = nodeDepth(c1)
+	if d != 1 {
+		t.Errorf("Node depth for c1 should be 1, got %d", d)
+	}
+
+	c2 := &render{parent: c1}
+	d = nodeDepth(c2)
+	if d != 2 {
+		t.Errorf("Node depth for c2 should be 2, got %d", d)
+	}
+}
+
+func TestDepthPath(t *testing.T) {
+	r := &render{}
+	p := depthPath(r)
+	e := ""
+
+	if p != e {
+		t.Errorf("Depth path for root should be %q, got %q", e, p)
+	}
+
+	c1 := &render{parent: r}
+	p = depthPath(c1)
+	e = "../"
+	if p != e {
+		t.Errorf("Depth path for c1 should be %q, got %q", e, p)
+	}
+
+	c2 := &render{parent: c1}
+	p = depthPath(c2)
+	e = "../../"
+	if p != e {
+		t.Errorf("Depth path for c2 should be %q, got %q", e, p)
+	}
+}
