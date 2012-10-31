@@ -1,0 +1,13 @@
+{
+  "Title": "Head of a Cow",
+
+  "PostsDir": "./",
+
+  "TemplatesDir": "../templates",
+
+  "StaticFilesDir": "../templates/static/",
+
+  "OutputDir": "../out/",
+
+  "Port": 8066
+}

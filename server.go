@@ -18,7 +18,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -28,13 +27,11 @@ import (
 )
 
 var (
-	serverPort = flag.Int("port", 0, "The port on which the standalone HTTP server will run.")
-
 	serverPollWait = flag.Int("server-poll-time", 60, "The time in seconds that the server waits before polling the directory for changes.")
 )
 
 type blogServer struct {
-	root string // Path to the root of the blog.
+	blog *Blog
 
 	mu    *sync.RWMutex
 	posts PostList
@@ -48,13 +45,9 @@ func RunAsServer() bool {
 
 // StartBlogServer runs the program's web server given the blog located
 // at |blogRoot|.
-func StartBlogServer(blogRoot string) error {
-	if !RunAsServer() {
-		return errors.New("No --port specified to start the server")
-	}
-
+func StartBlogServer(blog *Blog) error {
 	server := &blogServer{
-		root: blogRoot,
+		blog: blog,
 		mu:   new(sync.RWMutex),
 	}
 
@@ -64,8 +57,8 @@ func StartBlogServer(blogRoot string) error {
 	}
 	go server.pollPostChanges()
 
-	fmt.Printf("Starting blog server on port %d\n", *serverPort)
-	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), server)
+	fmt.Printf("Starting blog server on port %d\n", blog.Port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", blog.Port), server)
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
@@ -103,14 +96,17 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 			fmt.Fprint(rw, err.Error())
 			return
 		}
-		content := RenderPost(post, data, PageParams{RootPath: depthPath(render)})
+		content := RenderPost(post, data, PageParams{
+			Blog:     b.blog,
+			RootPath: depthPath(render),
+		})
 		rw.Write(content)
 	case renderTypeRedirect:
 		fallthrough
 	case renderTypeDirectory:
 		// The root element should generate a post list.
 		if render.t == renderTypeDirectory && render.parent == nil {
-			index, err := CreateIndex(b.posts)
+			index, err := CreateIndex(b.posts, PageParams{Blog: b.blog})
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(rw, err.Error())
@@ -143,7 +139,7 @@ func (b *blogServer) pollPostChanges() {
 }
 
 func (b *blogServer) buildPosts() (err error) {
-	newPosts, err := GetPostsInDirectory(b.root)
+	newPosts, err := GetPostsInDirectory(b.blog.PostsDir)
 	if err != nil {
 		return
 	}
@@ -164,7 +160,7 @@ func (b *blogServer) buildPosts() (err error) {
 		b.mu.Lock()
 		defer b.mu.Unlock()
 
-		b.posts, err = GetPostsInDirectory(b.root)
+		b.posts, err = GetPostsInDirectory(b.blog.PostsDir)
 		if err != nil {
 			return
 		}

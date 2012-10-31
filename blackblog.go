@@ -27,32 +27,85 @@ import (
 )
 
 var (
-	flagSource    = flag.String("root", "", "The root directory of all Markdown posts")
-	flagDest      = flag.String("dest", "", "The output directory for running in comiple mode")
-	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
+	// Flags that allow overriding configuration defaults.
+	serverPort = flag.Int("port", 0, "Override the port on which the standalone HTTP server will run.")
+	outputDir = flag.String("output", "", "Override the output directory when rendering to static files.")
+
+	commandDocs = map[string]string{
+		cmdNewBlog:      "Create a new blog with some sample data in the specified directory.",
+		cmdServer:       "Run a standalone web server for the given blog.",
+		cmdStaticOutput: "Render the blog out to static HTML files.",
+	}
+	commandOrder = []string{
+		cmdNewBlog,
+		cmdServer,
+		cmdStaticOutput,
+	}
+)
+
+const (
+	cmdNewBlog      = "newblog"
+	cmdServer       = "serve"
+	cmdStaticOutput = "render"
 )
 
 func main() {
+	flag.Usage = usage
 	flag.Parse()
+	args := flag.Args()
 
-	if *flagSource == "" {
-		fmt.Fprintf(os.Stderr, "No -root blog directory specified\n")
+	if len(args) < 1 {
+		usage()
 		os.Exit(1)
 	}
 
-	if !RunAsServer() && *flagDest == "" {
-		fmt.Fprintf(os.Stderr, "No -port or -dest flag specified\n")
+	// Load the blog configuration.
+	blogPath, _ := os.Getwd()
+	if len(args) >= 2 {
+		blogPath = args[1]
+	}
+
+	blog, err := ReadBlog(blogPath)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Could not read blog configuration:", err)
 		os.Exit(2)
 	}
 
-	if RunAsServer() {
-		if err := StartBlogServer(*flagSource); err != nil {
-			fmt.Fprint(os.Stderr, "Could not start blog server:", err)
-			os.Exit(3)
-		}
+	// Process flags to override configuration values.
+	if *serverPort != 0 {
+		blog.Port = *serverPort
+	}
+	if *outputDir != "" {
+		blog.OutputDir = *outputDir
 	}
 
-	posts, err := GetPostsInDirectory(*flagSource)
+	// Execute the specified command.
+	switch args[0] {
+	case cmdNewBlog:
+		fmt.Fprintf(os.Stderr, "NOT IMPLEMENTED")
+		os.Exit(200)
+	case cmdServer:
+		if err := StartBlogServer(blog); err != nil {
+			fmt.Fprintln(os.Stderr, "Could not start blog server:", err)
+			os.Exit(3)
+		}
+	case cmdStaticOutput:
+		writeStaticBlog(blog)
+	}
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage: %s command [path/to/blog]:\n\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  Commands:\n")
+	for _, cmdName := range commandOrder {
+		fmt.Fprintf(os.Stderr, "    %s\t%s\n", cmdName, commandDocs[cmdName])
+	}
+	fmt.Fprintf(os.Stderr, "\n  Flags:\n")
+	flag.PrintDefaults()
+}
+
+func writeStaticBlog(blog *Blog) {
+	posts, err := GetPostsInDirectory(blog.PostsDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "GetPostsInDirectory: %v\n", err)
 		os.Exit(3)
@@ -64,15 +117,15 @@ func main() {
 		os.Exit(3)
 	}
 
-	if err := writeRenderTree(*flagDest, renderTree); err != nil {
+	if err := writeRenderTree(blog, renderTree); err != nil {
 		fmt.Fprintf(os.Stderr, "writeRenderTree: %v\n", err)
 		os.Exit(3)
 	}
 
-	index, err := CreateIndex(posts)
+	index, err := CreateIndex(posts, PageParams{Blog: blog})
 	var f *os.File
 	if err == nil {
-		f, err = os.Create(path.Join(*flagDest, "index.html"))
+		f, err = os.Create(path.Join(blog.OutputDir, "index.html"))
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "writing index: %v\n", err)
