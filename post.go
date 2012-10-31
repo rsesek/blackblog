@@ -53,6 +53,9 @@ type Post struct {
 // any Markdown (.md) files and returns the corresponding Post objects.
 func GetPostsInDirectory(dirPath string) (posts PostList, err error) {
 	err = filepath.Walk(dirPath, func(file string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if !info.IsDir() && strings.HasSuffix(file, ".md") {
 			if post, err := NewPostFromPath(file); post != nil && err == nil {
 				posts = append(posts, post)
