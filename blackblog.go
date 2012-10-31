@@ -80,7 +80,7 @@ func main() {
 			os.Exit(3)
 		}
 	case cmdStaticOutput:
-		writeStaticBlog()
+		writeStaticBlog(blog)
 	}
 }
 
@@ -94,8 +94,8 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func writeStaticBlog() {
-	posts, err := GetPostsInDirectory(*flagSource)
+func writeStaticBlog(blog *Blog) {
+	posts, err := GetPostsInDirectory(blog.PostsDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "GetPostsInDirectory: %v\n", err)
 		os.Exit(3)
@@ -107,7 +107,7 @@ func writeStaticBlog() {
 		os.Exit(3)
 	}
 
-	if err := writeRenderTree(*flagDest, renderTree); err != nil {
+	if err := writeRenderTree(blog.OutputDir, renderTree); err != nil {
 		fmt.Fprintf(os.Stderr, "writeRenderTree: %v\n", err)
 		os.Exit(3)
 	}
@@ -115,7 +115,7 @@ func writeStaticBlog() {
 	index, err := CreateIndex(posts)
 	var f *os.File
 	if err == nil {
-		f, err = os.Create(path.Join(*flagDest, "index.html"))
+		f, err = os.Create(path.Join(blog.OutputDir, "index.html"))
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "writing index: %v\n", err)
