@@ -97,15 +97,18 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 	case renderTypePost:
 		post := render.object.(*Post)
 		data, err := post.GetContents()
+		var content []byte
+		if err == nil {
+			content, err = RenderPost(post, data, PageParams{
+				Blog:     b.blog,
+				RootPath: depthPath(render),
+			})
+		}
 		if err != nil {
 			rw.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(rw, err.Error())
 			return
 		}
-		content := RenderPost(post, data, PageParams{
-			Blog:     b.blog,
-			RootPath: depthPath(render),
-		})
 		rw.Write(content)
 	case renderTypeRedirect:
 		fallthrough

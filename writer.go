@@ -83,10 +83,16 @@ func writeRenderTree(blog *Blog, root *render) error {
 				return err
 			}
 
-			html := RenderPost(post, content, PageParams{
+			// Try to render the post.
+			html, err := RenderPost(post, content, PageParams{
 				Blog:     blog,
 				RootPath: depthPath(render),
 			})
+			if err != nil {
+				return err
+			}
+
+			// Try to write the post.
 			f, err := os.Create(p)
 			if err != nil {
 				return err

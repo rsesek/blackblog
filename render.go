@@ -30,10 +30,10 @@ import (
 )
 
 // RenderPost runs the input source through the blackfriday library.
-func RenderPost(post *Post, input []byte, page PageParams) []byte {
+func RenderPost(post *Post, input []byte, page PageParams) ([]byte, error) {
 	tpl, err := page.getTemplate("post")
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	content := blackfriday.Markdown(
@@ -54,10 +54,11 @@ func RenderPost(post *Post, input []byte, page PageParams) []byte {
 	}
 
 	buf := bytes.NewBuffer([]byte{})
-	tpl.Execute(buf, params)
+	if err := tpl.Execute(buf, params); err != nil {
+		return nil, err
+	}
 
-	result, err := wrapPage(buf.Bytes(), params.PageParams)
-	return result
+	return wrapPage(buf.Bytes(), params.PageParams)
 }
 
 func makeParentDirIfNecessary(dir string) error {
@@ -87,8 +88,7 @@ func CreateIndex(posts PostList, page PageParams) ([]byte, error) {
 		return nil, err
 	}
 
-	content, err := wrapPage(buf.Bytes(), params.PageParams)
-	return content, nil
+	return wrapPage(buf.Bytes(), params.PageParams)
 }
 
 // PageParams contains the varaibles passed to the basic header/footer
@@ -133,9 +133,15 @@ func wrapPage(content []byte, vars PageParams) ([]byte, error) {
 		return nil, err
 	}
 
-	header.Execute(buf, vars)
+	if err := header.Execute(buf, vars); err != nil {
+		return nil, err
+	}
+
 	buf.Write(content)
-	footer.Execute(buf, vars)
+
+	if err := footer.Execute(buf, vars); err != nil {
+		return nil, err
+	}
 
 	return buf.Bytes(), nil
 }
