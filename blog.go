@@ -53,6 +53,18 @@ type Blog struct {
 	configPath string
 }
 
+func (b *Blog) GetPostsDir() string {
+	return b.getPath(b.PostsDir)
+}
+
+func (b *Blog) GetOutputDir() string {
+	return b.getPath(b.OutputDir)
+}
+
+func (b *Blog) getPath(part string) string {
+	return path.Join(path.Dir(b.configPath), part)
+}
+
 // ReadBlog reads the blog configuration from the specified file path. This
 // does not need to end in `blackblog.json`.
 func ReadBlog(p string) (blog *Blog, err error) {

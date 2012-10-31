@@ -27,7 +27,7 @@ import (
 // WriteStaticBlog takes a given blog and renders its output as static HTML
 // files, according to the configuration.
 func WriteStaticBlog(blog *Blog) error {
-	posts, err := GetPostsInDirectory(blog.PostsDir)
+	posts, err := GetPostsInDirectory(blog.GetPostsDir())
 	if err != nil {
 		return errors.New("Get posts: " + err.Error())
 	}
@@ -44,7 +44,7 @@ func WriteStaticBlog(blog *Blog) error {
 	index, err := CreateIndex(posts, PageParams{Blog: blog})
 	var f *os.File
 	if err == nil {
-		f, err = os.Create(path.Join(blog.OutputDir, "index.html"))
+		f, err = os.Create(path.Join(blog.GetOutputDir(), "index.html"))
 	}
 	if err != nil {
 		return errors.New("Creating index: " + err.Error())
@@ -63,7 +63,7 @@ func writeRenderTree(blog *Blog, root *render) error {
 
 	// Iterate over this renderTree's subnodes.
 	for part, render := range root.object.(renderTree) {
-		p := path.Join(blog.OutputDir, part)
+		p := path.Join(blog.GetOutputDir(), part)
 		switch render.t {
 		case renderTypeDirectory:
 			// For directories, ensure that the parent directory exists. If it

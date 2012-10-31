@@ -148,7 +148,7 @@ func (b *blogServer) pollPostChanges() {
 }
 
 func (b *blogServer) buildPosts() (err error) {
-	newPosts, err := GetPostsInDirectory(b.blog.PostsDir)
+	newPosts, err := GetPostsInDirectory(b.blog.GetPostsDir())
 	if err != nil {
 		return
 	}

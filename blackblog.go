@@ -133,11 +133,9 @@ func newBlog(at string) error {
 	}
 
 	data := struct {
-		BlogDir    string
 		InstallDir string
 		Date       time.Time
 	}{
-		BlogDir:    at,
 		InstallDir: path.Dir(thisFile),
 		Date:       time.Now(),
 	}
@@ -173,10 +171,10 @@ func newBlog(at string) error {
 var (
 	defaultConfig = `{
 	"Title": "A Black Blog",
-	"PostsDir": "{{.BlogDir}}/posts",
+	"PostsDir": "./posts",
 	"TemplatesDir": "{{.InstallDir}}/templates",
 	"StaticFilesDir": "{{.InstallDir}}/templates/static",
-	"OutputDir": "{{.BlogDir}}/out",
+	"OutputDir": "./out",
 	"Port": 8066
 }`
 
