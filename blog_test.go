@@ -66,3 +66,25 @@ func TestReadWithSuffix(t *testing.T) {
 
 	verifyConfig(b, t)
 }
+
+func TestGetPaths(t *testing.T) {
+	blog := &Blog{
+		configPath: "/abs/path/blackblog.json",
+		OutputDir:  "../blog_out",
+		PostsDir:   "./posts",
+	}
+
+	var a, e string
+
+	e = "/abs/blog_out"
+	a = blog.GetOutputDir()
+	if a != e {
+		t.Errorf("GetOutputDir() should return %q, got %q", e, a)
+	}
+
+	e = "/abs/path/posts"
+	a = blog.GetPostsDir()
+	if a != e {
+		t.Errorf("GetPostsDir() should return %q, got %q", e, a)
+	}
+}
