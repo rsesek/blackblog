@@ -125,11 +125,8 @@ func (p *Post) GetContents() ([]byte, error) {
 		line, err := reader.ReadString('\n')
 
 		// If an error occurred, return the error except for EOF.
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			return result, err
+		if err != nil && err != io.EOF {
+			return nil, err
 		}
 
 		// Skip lines that are for metadata.
@@ -139,6 +136,11 @@ func (p *Post) GetContents() ([]byte, error) {
 
 		// Store the rest of the file.
 		result = append(result, line...)
+
+		// If this is the end of file, exit the loop to return the result.
+		if err == io.EOF {
+			break
+		}
 	}
 	return result, nil
 }
