@@ -21,15 +21,22 @@ not yet feature complete.
     $ go get github.com/russross/blackfriday
     $ go get github.com/rsesek/blackblog
 
-    $ mkdir my_new_blog
-    $ cd my_new_blog
-    $ cp -R $GOROOT/src/pkg/github.com/rsesek/blackblog/templates .
-    $ vim templates/header.html  # Change "Blog Title" to what you want.
+    To create a new blog and run the built-in server:
+    $ blackblog newblog myblog
+    $ blackblog serve myblog
 
-    $ vim first_post.md
+    To add new posts, simply create a file.md in myblog/posts/.
+    $ vim myblog/posts/first_post.md
 
-    $ blackblog -root=. -templates=./templates/ -out=../blog_out
-    $ scp -r ../blog_out example.com:~/public_html/blog
+    If you keep the server running, it will automatically reload the page as you
+    write new content and refresh your web browser.
+
+    Edit the title and other parameters (requires a server restart):
+    $ vim myblog/blackblog.json
+
+    To publish your blog as static files:
+    $ blackblog render myblog
+    $ scp -r ./myblog/out example.com:~/public_html/blog
 
 This installs the two Go packages you need, starts a new blog and copies the
 templates so they can be customized for your blog. It then compiles the blog
