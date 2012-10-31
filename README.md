@@ -21,20 +21,24 @@ not yet feature complete.
     $ go get github.com/russross/blackfriday
     $ go get github.com/rsesek/blackblog
 
-    To create a new blog and run the built-in server:
+To create a new blog and run the built-in server:
+
     $ blackblog newblog myblog
     $ blackblog serve myblog
 
-    To add new posts, simply create a file.md in myblog/posts/.
+To add new posts, simply create a `file.md` in `myblog/posts/`.
+
     $ vim myblog/posts/first_post.md
 
-    If you keep the server running, it will automatically reload the page as you
-    write new content and refresh your web browser.
+If you keep the server running, it will automatically reload the page as you
+write new content and refresh your web browser.
 
-    Edit the title and other parameters (requires a server restart):
+Edit the title and other parameters (requires a server restart):
+
     $ vim myblog/blackblog.json
 
-    To publish your blog as static files:
+To publish your blog as static files:
+
     $ blackblog render myblog
     $ scp -r ./myblog/out example.com:~/public_html/blog
 
