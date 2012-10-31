@@ -57,8 +57,14 @@ func StartBlogServer(blog *Blog) error {
 	}
 	go server.pollPostChanges()
 
+	if blog.StaticFilesDir != "" {
+		http.Handle(StaticFilesDir, http.StripPrefix(StaticFilesDir, http.FileServer(http.Dir(blog.StaticFilesDir))))
+	}
+
+	http.Handle("/", server)
+
 	fmt.Printf("Starting blog server on port %d\n", blog.Port)
-	return http.ListenAndServe(fmt.Sprintf(":%d", blog.Port), server)
+	return http.ListenAndServe(fmt.Sprintf(":%d", blog.Port), nil)
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {

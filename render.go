@@ -104,6 +104,9 @@ type PageParams struct {
 	RootPath string
 }
 
+// The directory in which static files live.
+const StaticFilesDir = "/static/"
+
 // IndexPageParams is used to render out the blog post list page.
 type IndexPageParams struct {
 	PageParams
