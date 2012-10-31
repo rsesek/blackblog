@@ -32,15 +32,21 @@ var (
 	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
 
 	commandDocs = map[string]string{
-		"newblog": "Create a new blog with some sample data in the specified directory.",
-		"serve":   "Run a standalone web server for the given blog.",
-		"render":  "Render the blog out to static HTML files.",
+		cmdNewBlog:      "Create a new blog with some sample data in the specified directory.",
+		cmdServer:       "Run a standalone web server for the given blog.",
+		cmdStaticOutput: "Render the blog out to static HTML files.",
 	}
 	commandOrder = []string{
-		"newblog",
-		"serve",
-		"render",
+		cmdNewBlog,
+		cmdServer,
+		cmdStaticOutput,
 	}
+)
+
+const (
+	cmdNewBlog      = "newblog"
+	cmdServer       = "serve"
+	cmdStaticOutput = "render"
 )
 
 func main() {
@@ -53,23 +59,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *flagSource == "" {
-		fmt.Fprintf(os.Stderr, "No -root blog directory specified\n")
-		os.Exit(1)
-	}
-
-	if !RunAsServer() && *flagDest == "" {
-		fmt.Fprintf(os.Stderr, "No -port or -dest flag specified\n")
-		os.Exit(2)
-	}
-
-	if RunAsServer() {
+	switch args[0] {
+	case cmdNewBlog:
+		fmt.Fprintf(os.Stderr, "NOT IMPLEMENTED")
+		os.Exit(200)
+	case cmdServer:
 		if err := StartBlogServer(*flagSource); err != nil {
 			fmt.Fprint(os.Stderr, "Could not start blog server:", err)
 			os.Exit(3)
 		}
+	case cmdStaticOutput:
+		writeStaticBlog()
 	}
+}
 
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  Commands:\n")
+	for _, cmdName := range commandOrder {
+		fmt.Fprintf(os.Stderr, "    %s\t%s\n", cmdName, commandDocs[cmdName])
+	}
+	fmt.Fprintf(os.Stderr, "\n  Flags:\n")
+	flag.PrintDefaults()
+}
+
+func writeStaticBlog() {
 	posts, err := GetPostsInDirectory(*flagSource)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "GetPostsInDirectory: %v\n", err)
@@ -98,16 +112,6 @@ func main() {
 	}
 	defer f.Close()
 	f.Write(index)
-}
-
-func usage() {
-	fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "  Commands:\n")
-	for _, cmdName := range commandOrder {
-		fmt.Fprintf(os.Stderr, "    %s\t%s\n", cmdName, commandDocs[cmdName])
-	}
-	fmt.Fprintf(os.Stderr, "\n  Flags:\n")
-	flag.PrintDefaults()
 }
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
