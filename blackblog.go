@@ -105,19 +105,3 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\n  Flags:\n")
 	flag.PrintDefaults()
 }
-
-// GetPostsInDirectory recursively examines the directory at the path and finds
-// any Markdown (.md) files and returns the corresponding Post objects.
-func GetPostsInDirectory(dirPath string) (posts PostList, err error) {
-	err = filepath.Walk(dirPath, func(file string, info os.FileInfo, err error) error {
-		if !info.IsDir() && strings.HasSuffix(file, ".md") {
-			if post, err := NewPostFromPath(file); post != nil && err == nil {
-				posts = append(posts, post)
-			} else {
-				return err
-			}
-		}
-		return nil
-	})
-	return
-}
