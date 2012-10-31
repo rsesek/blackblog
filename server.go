@@ -96,7 +96,10 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 			fmt.Fprint(rw, err.Error())
 			return
 		}
-		content := RenderPost(post, data, PageParams{RootPath: depthPath(render)})
+		content := RenderPost(post, data, PageParams{
+			Blog:     b.blog,
+			RootPath: depthPath(render),
+		})
 		rw.Write(content)
 	case renderTypeRedirect:
 		fallthrough

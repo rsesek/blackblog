@@ -137,14 +137,14 @@ func findOrCreateDirNode(url string, root *render) (*render, error) {
 
 // writeRenderTree takes a root render object and writes out a rendered site
 // to the given destination path.
-func writeRenderTree(dest string, root *render) error {
+func writeRenderTree(blog *Blog, root *render) error {
 	if root.t != renderTypeDirectory {
-		return fmt.Errorf("writeRenderTree for %q: not a directory", dest)
+		return fmt.Errorf("writeRenderTree for %q: not a directory", blog.OutputDir)
 	}
 
 	// Iterate over this renderTree's subnodes.
 	for part, render := range root.object.(renderTree) {
-		p := path.Join(dest, part)
+		p := path.Join(blog.OutputDir, part)
 		switch render.t {
 		case renderTypeDirectory:
 			// For directories, ensure that the parent directory exists. If it
@@ -153,7 +153,7 @@ func writeRenderTree(dest string, root *render) error {
 				return err
 			}
 			// Recurse on its subnodes.
-			if err := writeRenderTree(p, render); err != nil {
+			if err := writeRenderTree(blog, render); err != nil {
 				return err
 			}
 		case renderTypePost:
@@ -164,7 +164,10 @@ func writeRenderTree(dest string, root *render) error {
 				return err
 			}
 
-			html := RenderPost(post, content, PageParams{RootPath: depthPath(render)})
+			html := RenderPost(post, content, PageParams{
+				Blog: blog,
+				RootPath: depthPath(render),
+			})
 			f, err := os.Create(p)
 			if err != nil {
 				return err

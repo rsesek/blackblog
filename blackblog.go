@@ -117,7 +117,7 @@ func writeStaticBlog(blog *Blog) {
 		os.Exit(3)
 	}
 
-	if err := writeRenderTree(blog.OutputDir, renderTree); err != nil {
+	if err := writeRenderTree(blog, renderTree); err != nil {
 		fmt.Fprintf(os.Stderr, "writeRenderTree: %v\n", err)
 		os.Exit(3)
 	}
