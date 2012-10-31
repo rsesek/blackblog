@@ -27,8 +27,6 @@ import (
 )
 
 var (
-	serverPort = flag.Int("port", 0, "The port on which the standalone HTTP server will run.")
-
 	serverPollWait = flag.Int("server-poll-time", 60, "The time in seconds that the server waits before polling the directory for changes.")
 )
 

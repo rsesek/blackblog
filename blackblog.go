@@ -27,8 +27,11 @@ import (
 )
 
 var (
-	flagSource    = flag.String("root", "", "The root directory of all Markdown posts")
-	flagDest      = flag.String("dest", "", "The output directory for running in comiple mode")
+	// Flags that allow overriding configuration defaults.
+	serverPort = flag.Int("port", 0, "Override the port on which the standalone HTTP server will run.")
+	outputDir = flag.String("output", "", "Override the output directory when rendering to static files.")
+
+	// TODO: remove
 	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
 
 	commandDocs = map[string]string{
@@ -59,6 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Load the blog configuration.
 	blogPath, _ := os.Getwd()
 	if len(args) >= 2 {
 		blogPath = args[1]
@@ -70,6 +74,15 @@ func main() {
 		os.Exit(2)
 	}
 
+	// Process flags to override configuration values.
+	if *serverPort != 0 {
+		blog.Port = *serverPort
+	}
+	if *outputDir != "" {
+		blog.OutputDir = *outputDir
+	}
+
+	// Execute the specified command.
 	switch args[0] {
 	case cmdNewBlog:
 		fmt.Fprintf(os.Stderr, "NOT IMPLEMENTED")
