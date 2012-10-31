@@ -97,7 +97,3 @@ func GetPostsInDirectory(dirPath string) (posts PostList, err error) {
 	})
 	return
 }
-
-func getRootPath(name string) string {
-	return strings.Repeat("../", strings.Count(name, "/"))
-}
