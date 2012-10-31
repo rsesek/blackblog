@@ -21,7 +21,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -90,7 +89,10 @@ func main() {
 			os.Exit(3)
 		}
 	case cmdStaticOutput:
-		writeStaticBlog(blog)
+		if err := WriteStaticBlog(blog); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(3)
+		}
 	}
 }
 
@@ -102,37 +104,6 @@ func usage() {
 	}
 	fmt.Fprintf(os.Stderr, "\n  Flags:\n")
 	flag.PrintDefaults()
-}
-
-func writeStaticBlog(blog *Blog) {
-	posts, err := GetPostsInDirectory(blog.PostsDir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "GetPostsInDirectory: %v\n", err)
-		os.Exit(3)
-	}
-
-	renderTree, err := createRenderTree(posts)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "createRenderTree: %v\n", err)
-		os.Exit(3)
-	}
-
-	if err := writeRenderTree(blog, renderTree); err != nil {
-		fmt.Fprintf(os.Stderr, "writeRenderTree: %v\n", err)
-		os.Exit(3)
-	}
-
-	index, err := CreateIndex(posts, PageParams{Blog: blog})
-	var f *os.File
-	if err == nil {
-		f, err = os.Create(path.Join(blog.OutputDir, "index.html"))
-	}
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "writing index: %v\n", err)
-		os.Exit(3)
-	}
-	defer f.Close()
-	f.Write(index)
 }
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
