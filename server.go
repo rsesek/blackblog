@@ -160,10 +160,7 @@ func (b *blogServer) buildPosts() (err error) {
 		b.mu.Lock()
 		defer b.mu.Unlock()
 
-		b.posts, err = GetPostsInDirectory(b.blog.PostsDir)
-		if err != nil {
-			return
-		}
+		b.posts = newPosts
 		b.r, err = createRenderTree(b.posts)
 		if err != nil {
 			return
