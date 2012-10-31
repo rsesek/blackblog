@@ -18,17 +18,20 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
+	"path"
+	"runtime"
+	"text/template"
+	"time"
 )
 
 var (
 	// Flags that allow overriding configuration defaults.
 	serverPort = flag.Int("port", 0, "Override the port on which the standalone HTTP server will run.")
-	outputDir = flag.String("output", "", "Override the output directory when rendering to static files.")
+	outputDir  = flag.String("output", "", "Override the output directory when rendering to static files.")
 
 	commandDocs = map[string]string{
 		cmdNewBlog:      "Create a new blog with some sample data in the specified directory.",
@@ -65,7 +68,7 @@ func main() {
 	}
 
 	blog, err := ReadBlog(blogPath)
-	if err != nil {
+	if err != nil && args[0] != cmdNewBlog {
 		fmt.Fprintln(os.Stderr, "Could not read blog configuration:", err)
 		os.Exit(2)
 	}
@@ -81,8 +84,14 @@ func main() {
 	// Execute the specified command.
 	switch args[0] {
 	case cmdNewBlog:
-		fmt.Fprintf(os.Stderr, "NOT IMPLEMENTED")
-		os.Exit(200)
+		if len(args) < 2 {
+			fmt.Fprintln(os.Stderr, "Usage: blackblog newblog path/for/blog")
+			os.Exit(3)
+		}
+		if err := newBlog(args[1]); err != nil {
+			fmt.Fprintln(os.Stderr, "Error creating new blog:", err)
+			os.Exit(3)
+		}
 	case cmdServer:
 		if err := StartBlogServer(blog); err != nil {
 			fmt.Fprintln(os.Stderr, "Could not start blog server:", err)
@@ -105,3 +114,75 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\n  Flags:\n")
 	flag.PrintDefaults()
 }
+
+func newBlog(at string) error {
+	if err := os.Mkdir(at, 0755); err != nil {
+		return err
+	}
+
+	if err := os.Mkdir(path.Join(at, "posts"), 0755); err != nil {
+		return err
+	}
+	if err := os.Mkdir(path.Join(at, "out"), 0755); err != nil {
+		return err
+	}
+
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return errors.New("cannot find installation directory")
+	}
+
+	data := struct {
+		BlogDir    string
+		InstallDir string
+		Date       time.Time
+	}{
+		BlogDir:    at,
+		InstallDir: path.Dir(thisFile),
+		Date:       time.Now(),
+	}
+
+	config, err := template.New("config").Parse(defaultConfig)
+	if err != nil {
+		return err
+	}
+
+	post, err := template.New("post").Parse(defaultPost)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(path.Join(at, ConfigFileName))
+	if err == nil {
+		err = config.Execute(f, data)
+	}
+	f.Close()
+
+	if err != nil {
+		return err
+	}
+
+	f, err = os.Create(path.Join(at, "posts", "welcome.md"))
+	if err == nil {
+		err = post.Execute(f, data)
+	}
+	f.Close()
+	return err
+}
+
+var (
+	defaultConfig = `{
+	"Title": "A Black Blog",
+	"PostsDir": "{{.BlogDir}}/posts",
+	"TemplatesDir": "{{.InstallDir}}/templates",
+	"StaticFilesDir": "{{.InstallDir}}/templates/static",
+	"OutputDir": "{{.BlogDir}}/out",
+	"Port": 8066
+}`
+
+	defaultPost = `~~~ Title: Welcome to Blackblog
+~~~ Date: {{.Date.Format "January _2 2006"}}
+~~~ URL: welcome
+
+This is the first and only post in your Blackblog. Feel free to delete it.`
+)
