@@ -31,9 +31,6 @@ var (
 	serverPort = flag.Int("port", 0, "Override the port on which the standalone HTTP server will run.")
 	outputDir = flag.String("output", "", "Override the output directory when rendering to static files.")
 
-	// TODO: remove
-	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
-
 	commandDocs = map[string]string{
 		cmdNewBlog:      "Create a new blog with some sample data in the specified directory.",
 		cmdServer:       "Run a standalone web server for the given blog.",

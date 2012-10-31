@@ -31,7 +31,7 @@ import (
 
 // RenderPost runs the input source through the blackfriday library.
 func RenderPost(post *Post, input []byte, page PageParams) []byte {
-	tpl, err := getTemplate("post")
+	tpl, err := page.getTemplate("post")
 	if err != nil {
 		return nil
 	}
@@ -93,6 +93,9 @@ func CreateIndex(posts PostList) ([]byte, error) {
 // PageParams contains the varaibles passed to the basic header/footer
 // page templates.
 type PageParams struct {
+	// The blog configuration object.
+	Blog *Blog
+
 	// The title of the blog post.
 	Title string
 
@@ -116,12 +119,12 @@ type PostPageParams struct {
 func wrapPage(content []byte, vars PageParams) ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{})
 
-	header, err := getTemplate("header")
+	header, err := vars.getTemplate("header")
 	if err != nil {
 		return nil, err
 	}
 
-	footer, err := getTemplate("footer")
+	footer, err := vars.getTemplate("footer")
 	if err != nil {
 		return nil, err
 	}
@@ -133,8 +136,8 @@ func wrapPage(content []byte, vars PageParams) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func getTemplate(name string) (*template.Template, error) {
-	name = path.Join(*flagTemplates, name+".html")
+func (p *PageParams) getTemplate(name string) (*template.Template, error) {
+	name = path.Join(p.Blog.TemplatesDir, name+".html")
 	file, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
