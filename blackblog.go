@@ -178,9 +178,9 @@ var (
 	"Port": 8066
 }`
 
-	defaultPost = `~~~ Title: Welcome to Blackblog
-~~~ Date: {{.Date.Format "January _2 2006"}}
-~~~ URL: welcome
+	defaultPost = `~~ Title: Welcome to Blackblog
+~~ Date: {{.Date.Format "January _2 2006"}}
+~~ URL: welcome
 
 This is the first and only post in your Blackblog. Feel free to delete it.`
 )
