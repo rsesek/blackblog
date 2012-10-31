@@ -122,7 +122,7 @@ func writeStaticBlog(blog *Blog) {
 		os.Exit(3)
 	}
 
-	index, err := CreateIndex(posts)
+	index, err := CreateIndex(posts, PageParams{Blog: blog})
 	var f *os.File
 	if err == nil {
 		f, err = os.Create(path.Join(blog.OutputDir, "index.html"))

@@ -67,17 +67,18 @@ func makeParentDirIfNecessary(dir string) error {
 
 // CreateIndex takes the sorted list of posts and generates HTML output listing
 // each one.
-func CreateIndex(posts PostList) ([]byte, error) {
-	tpl, err := getTemplate("index")
+func CreateIndex(posts PostList, page PageParams) ([]byte, error) {
+	tpl, err := page.getTemplate("index")
 	if err != nil {
 		return nil, err
 	}
 
 	sort.Sort(posts)
 
+	page.Title = "Posts"
 	params := IndexPageParams{
 		Posts:      posts,
-		PageParams: PageParams{Title: "Posts"},
+		PageParams: page,
 	}
 
 	buf := bytes.NewBuffer([]byte{})

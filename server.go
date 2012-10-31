@@ -103,7 +103,7 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 	case renderTypeDirectory:
 		// The root element should generate a post list.
 		if render.t == renderTypeDirectory && render.parent == nil {
-			index, err := CreateIndex(b.posts)
+			index, err := CreateIndex(b.posts, PageParams{Blog: b.blog})
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(rw, err.Error())
