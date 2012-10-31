@@ -32,9 +32,9 @@ func verifyConfig(b *Blog, t *testing.T) {
 		{b.Title, "Head of a Cow", "Title"},
 		{b.PostsDir, "./", "PostsDir"},
 		{b.TemplatesDir, "../templates", "TemplatesDir"},
-		{b.StaticFilesDir, "", "StaticFilesDir"},
+		{b.StaticFilesDir, "../templates/static/", "StaticFilesDir"},
 		{b.OutputDir, "../out/", "OutputDir"},
-		{b.configPath, "./tests/blackblog.json", "configPath"},
+		{b.configPath, "tests/blackblog.json", "configPath"},
 	}
 
 	for _, e := range expectations {

@@ -17,6 +17,15 @@
 
 package main
 
+import (
+	"encoding/json"
+	"os"
+	"path"
+	"strings"
+)
+
+const ConfigFileName = "blackblog.json"
+
 // Blog is a structure that contains the configuration of a blackblog. This is
 // stored as a JSON file, in the blog root directory, named `blackblog.json`.
 type Blog struct {
@@ -46,10 +55,20 @@ type Blog struct {
 
 // ReadBlog reads the blog configuration from the specified file path. This
 // does not need to end in `blackblog.json`.
-func ReadBlog(path string) (*Blog, error) {
-	return nil, nil
-}
+func ReadBlog(p string) (blog *Blog, err error) {
+	if !strings.HasSuffix(p, ConfigFileName) {
+		p = path.Join(p, ConfigFileName)
+	}
 
-func WriteBlog(blog *Blog) error {
-	return nil
+	r, err := os.Open(p)
+	if err != nil {
+		return
+	}
+
+	blog = new(Blog)
+	d := json.NewDecoder(r)
+	if err = d.Decode(blog); err == nil {
+		blog.configPath = path.Clean(p)
+	}
+	return
 }

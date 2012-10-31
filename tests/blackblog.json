@@ -3,9 +3,9 @@
 
   "PostsDir": "./",
 
-  "TempaltesDir": "../templates",
+  "TemplatesDir": "../templates",
 
-  "StaticFilesDir": "",
+  "StaticFilesDir": "../templates/static/",
 
   "OutputDir": "../out/",
 
