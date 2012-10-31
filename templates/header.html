@@ -2,16 +2,13 @@
 
   Header Template
 
-  This file is put at the top of every generated page.
-
-  Variables:
-  - Title: The page's title.
-  - RootPath: The relative path to the root of the output directory.
+  This file is put at the top of every generated page. This is evaluated with a
+  PageParams structure.
 
 */}}<!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Blog Title - {{.Title}}</title>
+    <title>{{.Blog.Title}} - {{.Title}}</title>
     <link href="http://fonts.googleapis.com/css?family=Chivo:400,400italic,900" rel="stylesheet" type="text/css">
     <link rel="stylesheet" type="text/css" href="{{.StaticFileLink `blackblog.css`}}" />
   </head>
@@ -19,4 +16,4 @@
   <body>
 
     <div id="wrap">
-      <a href="{{.RootPath}}"><h1 id="header">A Black Blog</h1></a>
+      <a href="{{.RootPath}}"><h1 id="header">{{.Blog.Title}}</h1></a>
