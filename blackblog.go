@@ -30,10 +30,28 @@ var (
 	flagSource    = flag.String("root", "", "The root directory of all Markdown posts")
 	flagDest      = flag.String("dest", "", "The output directory for running in comiple mode")
 	flagTemplates = flag.String("templates", "templates/", "The directory containing the Blackblog templates")
+
+	commandDocs = map[string]string{
+		"newblog": "Create a new blog with some sample data in the specified directory.",
+		"serve":   "Run a standalone web server for the given blog.",
+		"render":  "Render the blog out to static HTML files.",
+	}
+	commandOrder = []string{
+		"newblog",
+		"serve",
+		"render",
+	}
 )
 
 func main() {
+	flag.Usage = usage
 	flag.Parse()
+	args := flag.Args()
+
+	if len(args) != 1 {
+		usage()
+		os.Exit(1)
+	}
 
 	if *flagSource == "" {
 		fmt.Fprintf(os.Stderr, "No -root blog directory specified\n")
@@ -80,6 +98,16 @@ func main() {
 	}
 	defer f.Close()
 	f.Write(index)
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "  Commands:\n")
+	for _, cmdName := range commandOrder {
+		fmt.Fprintf(os.Stderr, "    %s\t%s\n", cmdName, commandDocs[cmdName])
+	}
+	fmt.Fprintf(os.Stderr, "\n  Flags:\n")
+	flag.PrintDefaults()
 }
 
 // GetPostsInDirectory recursively examines the directory at the path and finds
