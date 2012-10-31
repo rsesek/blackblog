@@ -107,6 +107,12 @@ type PageParams struct {
 // The directory in which static files live.
 const StaticFilesDir = "/static/"
 
+// StaticFileLink returns a link for a static file.
+// BUG: This cannot be on type *PageParams for some reason. File a bug?
+func (p PageParams) StaticFileLink(file string) string {
+	return path.Join(p.RootPath, StaticFilesDir, file)
+}
+
 // IndexPageParams is used to render out the blog post list page.
 type IndexPageParams struct {
 	PageParams
