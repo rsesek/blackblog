@@ -54,9 +54,20 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	if len(args) != 1 {
+	if len(args) < 1 {
 		usage()
 		os.Exit(1)
+	}
+
+	blogPath, _ := os.Getwd()
+	if len(args) >= 2 {
+		blogPath = args[1]
+	}
+
+	blog, err := ReadBlog(blogPath)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Could not read blog configuration:", err)
+		os.Exit(2)
 	}
 
 	switch args[0] {
@@ -64,8 +75,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "NOT IMPLEMENTED")
 		os.Exit(200)
 	case cmdServer:
-		if err := StartBlogServer(*flagSource); err != nil {
-			fmt.Fprint(os.Stderr, "Could not start blog server:", err)
+		if err := StartBlogServer(blog); err != nil {
+			fmt.Fprintln(os.Stderr, "Could not start blog server:", err)
 			os.Exit(3)
 		}
 	case cmdStaticOutput:
@@ -74,7 +85,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %s command [path/to/blog]:\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "  Commands:\n")
 	for _, cmdName := range commandOrder {
 		fmt.Fprintf(os.Stderr, "    %s\t%s\n", cmdName, commandDocs[cmdName])

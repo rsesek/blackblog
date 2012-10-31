@@ -18,7 +18,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -48,13 +47,9 @@ func RunAsServer() bool {
 
 // StartBlogServer runs the program's web server given the blog located
 // at |blogRoot|.
-func StartBlogServer(blogRoot string) error {
-	if !RunAsServer() {
-		return errors.New("No --port specified to start the server")
-	}
-
+func StartBlogServer(blog *Blog) error {
 	server := &blogServer{
-		root: blogRoot,
+		root: blog.PostsDir,
 		mu:   new(sync.RWMutex),
 	}
 
@@ -64,8 +59,8 @@ func StartBlogServer(blogRoot string) error {
 	}
 	go server.pollPostChanges()
 
-	fmt.Printf("Starting blog server on port %d\n", *serverPort)
-	return http.ListenAndServe(fmt.Sprintf(":%d", *serverPort), server)
+	fmt.Printf("Starting blog server on port %d\n", blog.Port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", blog.Port), server)
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
