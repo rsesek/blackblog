@@ -19,6 +19,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 )
@@ -50,5 +51,59 @@ func WriteStaticBlog(blog *Blog) error {
 	}
 	defer f.Close()
 	f.Write(index)
+	return nil
+}
+
+// writeRenderTree takes a root render object and writes out a rendered site
+// to the given destination path.
+func writeRenderTree(blog *Blog, root *render) error {
+	if root.t != renderTypeDirectory {
+		return fmt.Errorf("writeRenderTree for %q: not a directory", blog.OutputDir)
+	}
+
+	// Iterate over this renderTree's subnodes.
+	for part, render := range root.object.(renderTree) {
+		p := path.Join(blog.OutputDir, part)
+		switch render.t {
+		case renderTypeDirectory:
+			// For directories, ensure that the parent directory exists. If it
+			// does not, create it and add a redirect index.html file.
+			if err := os.Mkdir(p, 0755); err != nil && !os.IsExist(err) {
+				return err
+			}
+			// Recurse on its subnodes.
+			if err := writeRenderTree(blog, render); err != nil {
+				return err
+			}
+		case renderTypePost:
+			// For posts, just render the content into the template.
+			post := render.object.(*Post)
+			content, err := post.GetContents()
+			if err != nil {
+				return err
+			}
+
+			html := RenderPost(post, content, PageParams{
+				Blog:     blog,
+				RootPath: depthPath(render),
+			})
+			f, err := os.Create(p)
+			if err != nil {
+				return err
+			}
+			f.Write(html)
+			f.Close()
+		case renderTypeRedirect:
+			f, err := os.Create(p)
+			if err != nil {
+				return err
+			}
+			fmt.Fprint(f, generateRedirect(render.object.(string)))
+			f.Close()
+		default:
+			return fmt.Errorf("writeRenderTree for %q: unknown renderType %v", p, render.t)
+		}
+	}
+
 	return nil
 }
