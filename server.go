@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	serverPollWait = flag.Int("server-poll-time", 60, "The time in seconds that the server waits before polling the directory for changes.")
+	serverPollWait = flag.Int("server-poll-time", 30, "The time in seconds that the server waits before polling the directory for changes.")
 )
 
 type blogServer struct {
@@ -36,11 +36,6 @@ type blogServer struct {
 	mu    *sync.RWMutex
 	posts PostList
 	r     *render
-}
-
-// RunAsServer checks if the program has been configured to run as a web server.
-func RunAsServer() bool {
-	return *serverPort != 0
 }
 
 // StartBlogServer runs the program's web server given the blog located
