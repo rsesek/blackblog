@@ -31,7 +31,7 @@ var (
 )
 
 type blogServer struct {
-	root string // Path to the root of the blog.
+	blog *Blog
 
 	mu    *sync.RWMutex
 	posts PostList
@@ -47,7 +47,7 @@ func RunAsServer() bool {
 // at |blogRoot|.
 func StartBlogServer(blog *Blog) error {
 	server := &blogServer{
-		root: blog.PostsDir,
+		blog: blog,
 		mu:   new(sync.RWMutex),
 	}
 
@@ -136,7 +136,7 @@ func (b *blogServer) pollPostChanges() {
 }
 
 func (b *blogServer) buildPosts() (err error) {
-	newPosts, err := GetPostsInDirectory(b.root)
+	newPosts, err := GetPostsInDirectory(b.blog.PostsDir)
 	if err != nil {
 		return
 	}
@@ -157,7 +157,7 @@ func (b *blogServer) buildPosts() (err error) {
 		b.mu.Lock()
 		defer b.mu.Unlock()
 
-		b.posts, err = GetPostsInDirectory(b.root)
+		b.posts, err = GetPostsInDirectory(b.blog.PostsDir)
 		if err != nil {
 			return
 		}
