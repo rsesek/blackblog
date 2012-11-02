@@ -39,6 +39,11 @@ func WriteStaticBlog(blog *Blog) error {
 		return errors.New("Render posts:" + err.Error())
 	}
 
+	dest := blog.GetOutputDir()
+	if err := os.Mkdir(dest, 0755); err != nil && !os.IsExist(err) {
+		return errors.New("Creating output directory: " + err.Error())
+	}
+
 	if err := writeRenderTree(blog, renderTree); err != nil {
 		return errors.New("Write files: " + err.Error())
 	}
