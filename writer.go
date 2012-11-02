@@ -44,7 +44,7 @@ func WriteStaticBlog(blog *Blog) error {
 		return errors.New("Creating output directory: " + err.Error())
 	}
 
-	if err := writeRenderTree(blog, renderTree); err != nil {
+	if err := writeRenderTree(blog.GetOutputDir(), blog, renderTree); err != nil {
 		return errors.New("Write files: " + err.Error())
 	}
 
@@ -63,14 +63,14 @@ func WriteStaticBlog(blog *Blog) error {
 
 // writeRenderTree takes a root render object and writes out a rendered site
 // to the given destination path.
-func writeRenderTree(blog *Blog, root *render) error {
+func writeRenderTree(dest string, blog *Blog, root *render) error {
 	if root.t != renderTypeDirectory {
 		return fmt.Errorf("writeRenderTree for %q: not a directory", blog.OutputDir)
 	}
 
 	// Iterate over this renderTree's subnodes.
 	for part, render := range root.object.(renderTree) {
-		p := path.Join(blog.GetOutputDir(), part)
+		p := path.Join(dest, part)
 		switch render.t {
 		case renderTypeDirectory:
 			// For directories, ensure that the parent directory exists. If it
@@ -79,7 +79,7 @@ func writeRenderTree(blog *Blog, root *render) error {
 				return err
 			}
 			// Recurse on its subnodes.
-			if err := writeRenderTree(blog, render); err != nil {
+			if err := writeRenderTree(p, blog, render); err != nil {
 				return err
 			}
 		case renderTypePost:
