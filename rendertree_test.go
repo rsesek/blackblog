@@ -209,16 +209,17 @@ func TestDepthPath(t *testing.T) {
 		t.Errorf("Depth path for root should be %q, got %q", e, p)
 	}
 
+	// In a directory structure, nodes off the root are at "root level."
 	c1 := &render{parent: r}
 	p = depthPath(c1)
-	e = "../"
+	e = ""
 	if p != e {
 		t.Errorf("Depth path for c1 should be %q, got %q", e, p)
 	}
 
 	c2 := &render{parent: c1}
 	p = depthPath(c2)
-	e = "../../"
+	e = "../"
 	if p != e {
 		t.Errorf("Depth path for c2 should be %q, got %q", e, p)
 	}

@@ -167,5 +167,9 @@ func nodeDepth(r *render) (i int) {
 
 // depthPath returns a relative path to the root for a render |r|.
 func depthPath(r *render) string {
-	return strings.Repeat("../", nodeDepth(r))
+	depth := nodeDepth(r) - 1
+	if depth < 0 {
+		depth = 0
+	}
+	return strings.Repeat("../", depth)
 }
