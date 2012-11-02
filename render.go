@@ -20,8 +20,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"sort"
 	"text/template"
@@ -53,17 +51,12 @@ func RenderPost(post *Post, input []byte, page PageParams) ([]byte, error) {
 		PageParams: page,
 	}
 
-	buf := bytes.NewBuffer([]byte{})
+	buf := new(bytes.Buffer)
 	if err := tpl.Execute(buf, params); err != nil {
 		return nil, err
 	}
 
 	return wrapPage(buf.Bytes(), params.PageParams)
-}
-
-func makeParentDirIfNecessary(dir string) error {
-	parent, _ := path.Split(dir)
-	return os.MkdirAll(parent, 0755)
 }
 
 // CreateIndex takes the sorted list of posts and generates HTML output listing
@@ -82,7 +75,7 @@ func CreateIndex(posts PostList, page PageParams) ([]byte, error) {
 		PageParams: page,
 	}
 
-	buf := bytes.NewBuffer([]byte{})
+	buf := new(bytes.Buffer)
 	err = tpl.Execute(buf, params)
 	if err != nil {
 		return nil, err
@@ -129,7 +122,7 @@ type PostPageParams struct {
 }
 
 func wrapPage(content []byte, vars PageParams) ([]byte, error) {
-	buf := bytes.NewBuffer([]byte{})
+	buf := new(bytes.Buffer)
 
 	header, err := vars.getTemplate("header")
 	if err != nil {
@@ -156,18 +149,7 @@ func wrapPage(content []byte, vars PageParams) ([]byte, error) {
 
 func (p *PageParams) getTemplate(name string) (*template.Template, error) {
 	name = path.Join(p.Blog.TemplatesDir, name+".html")
-	file, err := ioutil.ReadFile(name)
-	if err != nil {
-		return nil, err
-	}
-
-	tpl := template.New(name)
-	_, err = tpl.Parse(string(file))
-	if err != nil {
-		return nil, err
-	}
-
-	return tpl, nil
+	return template.ParseFiles(name)
 }
 
 func generateRedirect(url string) string {

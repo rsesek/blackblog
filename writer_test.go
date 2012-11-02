@@ -19,8 +19,8 @@ package main
 
 import (
 	"io"
-	"path"
 	"os"
+	"path"
 	"testing"
 )
 
