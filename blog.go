@@ -72,13 +72,14 @@ func ReadBlog(p string) (blog *Blog, err error) {
 		p = path.Join(p, ConfigFileName)
 	}
 
-	r, err := os.Open(p)
+	f, err := os.Open(p)
 	if err != nil {
 		return
 	}
+	defer f.Close()
 
 	blog = new(Blog)
-	d := json.NewDecoder(r)
+	d := json.NewDecoder(f)
 	if err = d.Decode(blog); err == nil {
 		blog.configPath = path.Clean(p)
 	}
