@@ -58,6 +58,13 @@ func WriteStaticBlog(blog *Blog) error {
 	}
 	defer f.Close()
 	f.Write(index)
+
+	if blog.StaticFilesDir != "" {
+		if err := copyDir(path.Join(dest, StaticFilesDir), blog.StaticFilesDir); err != nil {
+			return errors.New("Copying static files: " + err.Error())
+		}
+	}
+
 	return nil
 }
 
