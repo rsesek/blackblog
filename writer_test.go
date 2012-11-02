@@ -34,7 +34,7 @@ func TestCopyDir(t *testing.T) {
 		t.Fatalf("Error copying directory: %v", err)
 	}
 
-	f, err := os.Open(path.Join(dest, "recurse", "copy_test"))
+	f, err := os.Open(path.Join(dest, "recurse", "copy_test.txt"))
 	if err != nil {
 		t.Fatalf("Cannot open test file: %v", err)
 	}
@@ -45,8 +45,8 @@ func TestCopyDir(t *testing.T) {
 		t.Fatalf("Error Stat()ing file: %v", err)
 	}
 
-	if info.Mode() != 0754 {
-		t.Errorf("Mode should be 0754, got %v", info.Mode())
+	if info.Mode() != 0755 {
+		t.Errorf("Mode should be 0755, got %v", info.Mode())
 	}
 
 	data := make([]byte, 4)
