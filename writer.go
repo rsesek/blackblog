@@ -20,8 +20,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 // WriteStaticBlog takes a given blog and renders its output as static HTML
@@ -112,4 +114,46 @@ func writeRenderTree(blog *Blog, root *render) error {
 	}
 
 	return nil
+}
+
+// copyDir dittos the source directory tree to the destination.
+func copyDir(dst, src string) error {
+	// Make sure the destination exists.
+	if err := os.Mkdir(dst, 0755); err != nil && !os.IsExist(err) {
+		return err
+	}
+
+	src = path.Clean(src)
+	return filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Strip off the source directory prefix.
+		newP := path.Join(dst, p[len(src):])
+
+		if info.IsDir() {
+			if err := os.Mkdir(newP, 0755); !os.IsExist(err) {
+				return err
+			}
+		} else {
+			df, err := os.OpenFile(newP, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, info.Mode())
+			if err != nil {
+				return err
+			}
+			defer df.Close()
+
+			sf, err := os.Open(p)
+			if err != nil {
+				return err
+			}
+			defer sf.Close()
+
+			if _, err := io.Copy(df, sf); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
