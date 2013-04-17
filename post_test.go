@@ -106,6 +106,8 @@ func TestCreateURL(t *testing.T) {
 		{"2012/1/foobar.html", Post{Title: "Foobar", Date: "1 January 2012"}},
 		{"2012/4/some_post.html", Post{Title: "Some Post", Date: "4 April 2012"}},
 		{"2012/3/a_post.html", Post{Filename: "some/path/a_post.md", Date: "March 3, 2012"}},
+		{"2013/4/nyc_meetup_april_2013.html", Post{Title: "NYC Meetup, April 2013", Date: "April 16, 2013"}},
+		{"escaped_test_page.html", Post{Title: `Escaped, Test! "Page"`}},
 		{"test_post.html", Post{Filename: "/some/test/test_post.md"}},
 		{"test_test_test.html", Post{Title: "Test tEsT TEST"}},
 		{"foobar.html", Post{URLFragment: "foobar"}},

@@ -26,6 +26,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -193,7 +194,8 @@ func (p *Post) CreateURL() string {
 	// First, create the file's basename.
 	basename := p.URLFragment
 	if basename == "" && p.Title != "" {
-		basename = strings.Replace(p.Title, " ", "_", -1)
+		basename = regexp.MustCompile("[^A-Za-z0-9_]").ReplaceAllString(p.Title, "_")
+		basename = regexp.MustCompile("_{1,}").ReplaceAllString(basename, "_")
 	} else if basename == "" {
 		basename = path.Base(p.Filename)
 		ext := path.Ext(basename)
@@ -201,6 +203,9 @@ func (p *Post) CreateURL() string {
 	}
 
 	basename = strings.ToLower(basename)
+	if strings.HasSuffix(basename, "_") {
+		basename = basename[:len(basename)-1]
+	}
 	url := basename + ".html"
 
 	// Next, try and get the date of the post to include subdirectories.
