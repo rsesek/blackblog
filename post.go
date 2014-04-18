@@ -97,13 +97,10 @@ func (p *Post) IsUpToDate() bool {
 }
 
 func (p *Post) isUpToDateInternal(file *os.File) bool {
-	fd, err := p.Open()
-	if err != nil {
+	if p.checksum == nil {
 		return false
 	}
-	defer fd.Close()
-
-	return bytes.Equal(p.checksum, computeChecksum(fd))
+	return bytes.Equal(p.checksum, computeChecksum(file))
 }
 
 func computeChecksum(file *os.File) []byte {
