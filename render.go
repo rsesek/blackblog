@@ -114,6 +114,30 @@ type IndexPageParams struct {
 	Posts PostList
 }
 
+func (p IndexPageParams) PostsDescending() PostList {
+	return p.PostsDescendingLimit(-1)
+}
+
+func (p IndexPageParams) PostsAscending() PostList {
+	return p.PostsAscendingLimit(-1)
+}
+
+func (p IndexPageParams) PostsDescendingLimit(limit int) PostList {
+	sort.Sort(sort.Reverse(p.Posts))
+	if limit < len(p.Posts) && limit > 0 {
+		return p.Posts[:limit]
+	}
+	return p.Posts
+}
+
+func (p IndexPageParams) PostsAscendingLimit(limit int) PostList {
+	sort.Sort(p.Posts)
+	if limit < len(p.Posts) && limit > 0 {
+		return p.Posts[:limit]
+	}
+	return p.Posts
+}
+
 // PostPageParams is used for displaying a rendered post.
 type PostPageParams struct {
 	PageParams
