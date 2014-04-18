@@ -19,7 +19,7 @@
 <h1>Posts</h1>
 
 <ul id="posts-list">
-{{range $_, $post := .Posts}}
+{{range $_, $post := .PostsDescending}}
   <li>
     <a href="{{.CreateURL}}">
       <span class="title">{{.Title}}</span>
