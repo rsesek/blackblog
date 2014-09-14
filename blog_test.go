@@ -96,6 +96,7 @@ func TestExtensionsAndOptions(t *testing.T) {
 		MarkdownExtensions:  []string{"EXTENSION_FOOTNOTES", "EXTENSION_NO_INTRA_EMPHASIS"},
 		MarkdownHTMLOptions: []string{"HTML_USE_SMARTYPANTS", "HTML_USE_XHTML", "HTML_SMARTYPANTS_LATEX_DASHES", "HTML_SAFELINK", "HTML_TOC"},
 	}
+	blog.parseOptions()
 
 	extensions := blog.GetMarkdownExtensions()
 	if extensions != blackfriday.EXTENSION_FOOTNOTES|blackfriday.EXTENSION_NO_INTRA_EMPHASIS {
@@ -109,6 +110,7 @@ func TestExtensionsAndOptions(t *testing.T) {
 
 	// If there are no HTML options in a blog, then use the old defaults.
 	blog = &Blog{}
+	blog.parseOptions()
 	if blog.GetMarkdownExtensions() != 0 {
 		t.Errorf("Default markdown extensions should be empty, got %#x", blog.GetMarkdownExtensions())
 	}

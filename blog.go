@@ -19,6 +19,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -75,71 +76,11 @@ func (b *Blog) getPath(part string) string {
 	return path.Join(path.Dir(b.configPath), part)
 }
 
-var markdownExtensions = map[string]int{
-	"EXTENSION_NO_INTRA_EMPHASIS":          blackfriday.EXTENSION_NO_INTRA_EMPHASIS,
-	"EXTENSION_TABLES":                     blackfriday.EXTENSION_TABLES,
-	"EXTENSION_FENCED_CODE":                blackfriday.EXTENSION_FENCED_CODE,
-	"EXTENSION_AUTOLINK":                   blackfriday.EXTENSION_AUTOLINK,
-	"EXTENSION_STRIKETHROUGH":              blackfriday.EXTENSION_STRIKETHROUGH,
-	"EXTENSION_LAX_HTML_BLOCKS":            blackfriday.EXTENSION_LAX_HTML_BLOCKS,
-	"EXTENSION_SPACE_HEADERS":              blackfriday.EXTENSION_SPACE_HEADERS,
-	"EXTENSION_HARD_LINE_BREAK":            blackfriday.EXTENSION_HARD_LINE_BREAK,
-	"EXTENSION_TAB_SIZE_EIGHT":             blackfriday.EXTENSION_TAB_SIZE_EIGHT,
-	"EXTENSION_FOOTNOTES":                  blackfriday.EXTENSION_FOOTNOTES,
-	"EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK": blackfriday.EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK,
-	"EXTENSION_HEADER_IDS":                 blackfriday.EXTENSION_HEADER_IDS,
-	"EXTENSION_TITLEBLOCK":                 blackfriday.EXTENSION_TITLEBLOCK,
-}
-
 func (b *Blog) GetMarkdownExtensions() int {
-	if b.markdownExtensions == 0 {
-		for _, extension := range b.MarkdownExtensions {
-			opt, ok := markdownExtensions[extension]
-			if !ok {
-				panic("Unknown Markdown Extension " + extension)
-			}
-			b.markdownExtensions |= opt
-		}
-	}
 	return b.markdownExtensions
 }
 
-var markdownHTMLOptions = map[string]int{
-	"HTML_SKIP_HTML":                blackfriday.HTML_SKIP_HTML,
-	"HTML_SKIP_STYLE":               blackfriday.HTML_SKIP_STYLE,
-	"HTML_SKIP_IMAGES":              blackfriday.HTML_SKIP_IMAGES,
-	"HTML_SKIP_LINKS":               blackfriday.HTML_SKIP_LINKS,
-	"HTML_SANITIZE_OUTPUT":          blackfriday.HTML_SANITIZE_OUTPUT,
-	"HTML_SAFELINK":                 blackfriday.HTML_SAFELINK,
-	"HTML_NOFOLLOW_LINKS":           blackfriday.HTML_NOFOLLOW_LINKS,
-	"HTML_HREF_TARGET_BLANK":        blackfriday.HTML_HREF_TARGET_BLANK,
-	"HTML_TOC":                      blackfriday.HTML_TOC,
-	"HTML_OMIT_CONTENTS":            blackfriday.HTML_OMIT_CONTENTS,
-	"HTML_COMPLETE_PAGE":            blackfriday.HTML_COMPLETE_PAGE,
-	"HTML_USE_XHTML":                blackfriday.HTML_USE_XHTML,
-	"HTML_USE_SMARTYPANTS":          blackfriday.HTML_USE_SMARTYPANTS,
-	"HTML_SMARTYPANTS_FRACTIONS":    blackfriday.HTML_SMARTYPANTS_FRACTIONS,
-	"HTML_SMARTYPANTS_LATEX_DASHES": blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
-	"HTML_FOOTNOTE_RETURN_LINKS":    blackfriday.HTML_FOOTNOTE_RETURN_LINKS,
-}
-
 func (b *Blog) GetMarkdownHTMLOptions() int {
-	if b.markdownHTMLOptions == 0 {
-		options := b.MarkdownHTMLOptions
-		if options == nil {
-			// The default options that were specified before the configuration allowed
-			// specification.
-			options = []string{"HTML_USE_SMARTYPANTS", "HTML_USE_XHTML", "HTML_SMARTYPANTS_LATEX_DASHES"}
-		}
-
-		for _, option := range options {
-			opt, ok := markdownHTMLOptions[option]
-			if !ok {
-				panic("Unknown Markdown HTML Option " + option)
-			}
-			b.markdownHTMLOptions |= opt
-		}
-	}
 	return b.markdownHTMLOptions
 }
 
@@ -161,5 +102,72 @@ func ReadBlog(p string) (blog *Blog, err error) {
 	if err = d.Decode(blog); err == nil {
 		blog.configPath = path.Clean(p)
 	}
+
+	err = blog.parseOptions()
+
 	return
 }
+
+func (b *Blog) parseOptions() error {
+	if err := parseFlags(&b.markdownExtensions, markdownExtensions, b.MarkdownExtensions); err != nil {
+		return fmt.Errorf("Markdown Extensions: %v", err)
+	}
+	options := b.MarkdownHTMLOptions
+	if options == nil {
+		// The default options that were specified before the configuration allowed
+		// specification.
+		options = []string{"HTML_USE_SMARTYPANTS", "HTML_USE_XHTML", "HTML_SMARTYPANTS_LATEX_DASHES"}
+	}
+	if err := parseFlags(&b.markdownHTMLOptions, markdownHTMLOptions, options); err != nil {
+		return fmt.Errorf("Markdown HTML Options: %v", err)
+	}
+	return nil
+}
+
+func parseFlags(flags *int, allowedFlags map[string]int, specifiedFlags []string) error {
+	for _, flag := range specifiedFlags {
+		value, ok := allowedFlags[flag]
+		if !ok {
+			return fmt.Errorf("Unknown flag %q", flag)
+		}
+		*flags |= value
+	}
+	return nil
+}
+
+var (
+	markdownExtensions = map[string]int{
+		"EXTENSION_NO_INTRA_EMPHASIS":          blackfriday.EXTENSION_NO_INTRA_EMPHASIS,
+		"EXTENSION_TABLES":                     blackfriday.EXTENSION_TABLES,
+		"EXTENSION_FENCED_CODE":                blackfriday.EXTENSION_FENCED_CODE,
+		"EXTENSION_AUTOLINK":                   blackfriday.EXTENSION_AUTOLINK,
+		"EXTENSION_STRIKETHROUGH":              blackfriday.EXTENSION_STRIKETHROUGH,
+		"EXTENSION_LAX_HTML_BLOCKS":            blackfriday.EXTENSION_LAX_HTML_BLOCKS,
+		"EXTENSION_SPACE_HEADERS":              blackfriday.EXTENSION_SPACE_HEADERS,
+		"EXTENSION_HARD_LINE_BREAK":            blackfriday.EXTENSION_HARD_LINE_BREAK,
+		"EXTENSION_TAB_SIZE_EIGHT":             blackfriday.EXTENSION_TAB_SIZE_EIGHT,
+		"EXTENSION_FOOTNOTES":                  blackfriday.EXTENSION_FOOTNOTES,
+		"EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK": blackfriday.EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK,
+		"EXTENSION_HEADER_IDS":                 blackfriday.EXTENSION_HEADER_IDS,
+		"EXTENSION_TITLEBLOCK":                 blackfriday.EXTENSION_TITLEBLOCK,
+	}
+
+	markdownHTMLOptions = map[string]int{
+		"HTML_SKIP_HTML":                blackfriday.HTML_SKIP_HTML,
+		"HTML_SKIP_STYLE":               blackfriday.HTML_SKIP_STYLE,
+		"HTML_SKIP_IMAGES":              blackfriday.HTML_SKIP_IMAGES,
+		"HTML_SKIP_LINKS":               blackfriday.HTML_SKIP_LINKS,
+		"HTML_SANITIZE_OUTPUT":          blackfriday.HTML_SANITIZE_OUTPUT,
+		"HTML_SAFELINK":                 blackfriday.HTML_SAFELINK,
+		"HTML_NOFOLLOW_LINKS":           blackfriday.HTML_NOFOLLOW_LINKS,
+		"HTML_HREF_TARGET_BLANK":        blackfriday.HTML_HREF_TARGET_BLANK,
+		"HTML_TOC":                      blackfriday.HTML_TOC,
+		"HTML_OMIT_CONTENTS":            blackfriday.HTML_OMIT_CONTENTS,
+		"HTML_COMPLETE_PAGE":            blackfriday.HTML_COMPLETE_PAGE,
+		"HTML_USE_XHTML":                blackfriday.HTML_USE_XHTML,
+		"HTML_USE_SMARTYPANTS":          blackfriday.HTML_USE_SMARTYPANTS,
+		"HTML_SMARTYPANTS_FRACTIONS":    blackfriday.HTML_SMARTYPANTS_FRACTIONS,
+		"HTML_SMARTYPANTS_LATEX_DASHES": blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
+		"HTML_FOOTNOTE_RETURN_LINKS":    blackfriday.HTML_FOOTNOTE_RETURN_LINKS,
+	}
+)
