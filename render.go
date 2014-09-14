@@ -36,13 +36,8 @@ func RenderPost(post *Post, input []byte, page PageParams) ([]byte, error) {
 
 	content := blackfriday.Markdown(
 		input,
-		blackfriday.HtmlRenderer(
-			blackfriday.HTML_USE_SMARTYPANTS|
-				blackfriday.HTML_USE_XHTML|
-				blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
-			"",
-			""),
-		0)
+		blackfriday.HtmlRenderer(page.Blog.GetMarkdownHTMLOptions(), "", ""),
+		page.Blog.GetMarkdownExtensions())
 
 	page.Title = post.Title
 	params := PostPageParams{

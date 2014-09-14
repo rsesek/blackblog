@@ -19,6 +19,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/russross/blackfriday"
 )
 
 func verifyConfig(b *Blog, t *testing.T) {
@@ -86,5 +88,32 @@ func TestGetPaths(t *testing.T) {
 	a = blog.GetPostsDir()
 	if a != e {
 		t.Errorf("GetPostsDir() should return %q, got %q", e, a)
+	}
+}
+
+func TestExtensionsAndOptions(t *testing.T) {
+	blog := &Blog{
+		MarkdownExtensions:  []string{"EXTENSION_FOOTNOTES", "EXTENSION_NO_INTRA_EMPHASIS"},
+		MarkdownHTMLOptions: []string{"HTML_USE_SMARTYPANTS", "HTML_USE_XHTML", "HTML_SMARTYPANTS_LATEX_DASHES", "HTML_SAFELINK", "HTML_TOC"},
+	}
+
+	extensions := blog.GetMarkdownExtensions()
+	if extensions != blackfriday.EXTENSION_FOOTNOTES|blackfriday.EXTENSION_NO_INTRA_EMPHASIS {
+		t.Errorf("Incorrect extensions-to-flags conversion")
+	}
+
+	options := blog.GetMarkdownHTMLOptions()
+	if options != blackfriday.HTML_USE_SMARTYPANTS|blackfriday.HTML_USE_XHTML|blackfriday.HTML_SMARTYPANTS_LATEX_DASHES|blackfriday.HTML_SAFELINK|blackfriday.HTML_TOC {
+		t.Errorf("Incorrect HTML-options-to-flags conversion")
+	}
+
+	// If there are no HTML options in a blog, then use the old defaults.
+	blog = &Blog{}
+	if blog.GetMarkdownExtensions() != 0 {
+		t.Errorf("Default markdown extensions should be empty, got %#x", blog.GetMarkdownExtensions())
+	}
+	expected := blackfriday.HTML_USE_SMARTYPANTS | blackfriday.HTML_USE_XHTML | blackfriday.HTML_SMARTYPANTS_LATEX_DASHES
+	if blog.GetMarkdownHTMLOptions() != expected {
+		t.Errorf("Default markdown HTML options should be %#x, got %#x", expected, blog.GetMarkdownHTMLOptions())
 	}
 }
