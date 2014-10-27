@@ -42,6 +42,8 @@ func TestSortedPosts(t *testing.T) {
 	posts := PostList{
 		&Post{URLFragment: "alpha"},
 		&Post{URLFragment: "b_test", Date: "6 January 2012"},
+		&Post{URLFragment: "amazing", Date: "1 October 2012"},
+		&Post{URLFragment: "aardvark", Date: "15 September 2012"},
 		&Post{URLFragment: "c_test", Date: "18 January 2012"},
 		&Post{URLFragment: "test", Date: "7 February 2011"},
 	}
@@ -49,11 +51,28 @@ func TestSortedPosts(t *testing.T) {
 		"2011/2/test.html",
 		"2012/1/b_test.html",
 		"2012/1/c_test.html",
+		"2012/9/aardvark.html",
+		"2012/10/amazing.html",
 		"alpha.html",
 	}
 
 	sort.Sort(posts)
 
+	for i, expected := range order {
+		if expected != posts[i].CreateURL() {
+			t.Errorf("Sorted order mismatch. At %d, expected '%s', got '%s'", i, expected, posts[i].CreateURL())
+		}
+	}
+
+	sort.Sort(sort.Reverse(posts))
+	order = []string{
+		"alpha.html",
+		"2012/10/amazing.html",
+		"2012/9/aardvark.html",
+		"2012/1/c_test.html",
+		"2012/1/b_test.html",
+		"2011/2/test.html",
+	}
 	for i, expected := range order {
 		if expected != posts[i].CreateURL() {
 			t.Errorf("Sorted order mismatch. At %d, expected '%s', got '%s'", i, expected, posts[i].CreateURL())

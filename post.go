@@ -45,6 +45,7 @@ type Post struct {
 
 	// The date the post was published, from the metadata.
 	Date string
+	dateParsed time.Time
 
 	// The MD5 checksum of the file's contents.
 	checksum []byte
@@ -206,8 +207,8 @@ func (p *Post) CreateURL() string {
 	url := basename + ".html"
 
 	// Next, try and get the date of the post to include subdirectories.
-	if t := parseDate(p.Date); !t.IsZero() {
-		year, month, _ := t.Date()
+	if p.dateParsed = parseDate(p.Date); !p.dateParsed.IsZero() {
+		year, month, _ := p.dateParsed.Date()
 		url = path.Join(strconv.FormatInt(int64(year), 10), strconv.Itoa(int(month)), url)
 	}
 
@@ -246,7 +247,14 @@ func (pl PostList) Len() int {
 }
 
 func (pl PostList) Less(i, j int) bool {
-	return pl[i].CreateURL() < pl[j].CreateURL()
+	// Call CreateURL first to ensure the date is parsed.
+	ui, uj := pl[i].CreateURL(), pl[j].CreateURL()
+	di, dj := pl[i].dateParsed, pl[j].dateParsed
+
+	if !di.IsZero() && !dj.IsZero() {
+		return di.Before(dj)
+	}
+	return ui < uj
 }
 
 func (pl PostList) Swap(i, j int) {
