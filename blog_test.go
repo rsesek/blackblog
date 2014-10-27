@@ -31,11 +31,11 @@ func verifyConfig(b *Blog, t *testing.T) {
 	expectations := []struct {
 		actual, expected, field string
 	}{
-		{b.Title, "Head of a Cow", "Title"},
-		{b.PostsDir, "./", "PostsDir"},
-		{b.TemplatesDir, "../templates", "TemplatesDir"},
-		{b.StaticFilesDir, "../templates/static/", "StaticFilesDir"},
-		{b.OutputDir, "../out/", "OutputDir"},
+		{b.Title(), "Head of a Cow", "Title"},
+		{b.config.PostsDir, "./", "PostsDir"},
+		{b.config.TemplatesDir, "../templates", "TemplatesDir"},
+		{b.StaticFilesDir(), "../templates/static/", "StaticFilesDir"},
+		{b.config.OutputDir, "../out/", "OutputDir"},
 		{b.configPath, "tests/blackblog.json", "configPath"},
 	}
 
@@ -46,8 +46,8 @@ func verifyConfig(b *Blog, t *testing.T) {
 	}
 
 	port := 8066
-	if b.Port != port {
-		t.Errorf("Port should be %d, got %d", port, b.Port)
+	if b.Port() != port {
+		t.Errorf("Port should be %d, got %d", port, b.Port())
 	}
 }
 
@@ -72,8 +72,10 @@ func TestReadWithSuffix(t *testing.T) {
 func TestGetPaths(t *testing.T) {
 	blog := &Blog{
 		configPath: "/abs/path/blackblog.json",
-		OutputDir:  "../blog_out",
-		PostsDir:   "./posts",
+		config: configFile{
+			OutputDir: "../blog_out",
+			PostsDir:  "./posts",
+		},
 	}
 
 	var a, e string
@@ -92,10 +94,10 @@ func TestGetPaths(t *testing.T) {
 }
 
 func TestExtensionsAndOptions(t *testing.T) {
-	blog := &Blog{
+	blog := &Blog{config: configFile{
 		MarkdownExtensions:  []string{"EXTENSION_FOOTNOTES", "EXTENSION_NO_INTRA_EMPHASIS"},
 		MarkdownHTMLOptions: []string{"HTML_USE_SMARTYPANTS", "HTML_USE_XHTML", "HTML_SMARTYPANTS_LATEX_DASHES", "HTML_SAFELINK", "HTML_TOC"},
-	}
+	}}
 	blog.parseOptions()
 
 	extensions := blog.GetMarkdownExtensions()

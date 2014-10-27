@@ -32,6 +32,18 @@ const ConfigFileName = "blackblog.json"
 // Blog is a structure that contains the configuration of a blackblog. This is
 // stored as a JSON file, in the blog root directory, named `blackblog.json`.
 type Blog struct {
+	// The configuration data.
+	config configFile
+
+	// Parsed values of the string versions in the config.
+	markdownExtensions  int
+	markdownHTMLOptions int
+
+	// Path to the configuration file (including "blackblog.json").
+	configPath string
+}
+
+type configFile struct {
 	// The name of the blog, used in page titles.
 	Title string
 
@@ -54,22 +66,33 @@ type Blog struct {
 
 	// A list of string EXTENSION_ constants to pass to Blackfriday Markdown.
 	MarkdownExtensions []string
-	markdownExtensions int
 
 	// A list of HTML_ options to pass to the Blackfriday Markdown HTML renderer.
 	MarkdownHTMLOptions []string
-	markdownHTMLOptions int
+}
 
-	// Path to the configuration file (including "blackblog.json").
-	configPath string
+func (b *Blog) Title() string {
+	return b.config.Title
+}
+
+func (b *Blog) Port() int {
+	return b.config.Port
+}
+
+func (b *Blog) TemplatesDir() string {
+	return b.config.TemplatesDir
+}
+
+func (b *Blog) StaticFilesDir() string {
+	return b.config.StaticFilesDir
 }
 
 func (b *Blog) GetPostsDir() string {
-	return b.getPath(b.PostsDir)
+	return b.getPath(b.config.PostsDir)
 }
 
 func (b *Blog) GetOutputDir() string {
-	return b.getPath(b.OutputDir)
+	return b.getPath(b.config.OutputDir)
 }
 
 func (b *Blog) getPath(part string) string {
@@ -86,33 +109,39 @@ func (b *Blog) GetMarkdownHTMLOptions() int {
 
 // ReadBlog reads the blog configuration from the specified file path. This
 // does not need to end in `blackblog.json`.
-func ReadBlog(p string) (blog *Blog, err error) {
+func ReadBlog(p string) (*Blog, error) {
 	if !strings.HasSuffix(p, ConfigFileName) {
 		p = path.Join(p, ConfigFileName)
 	}
 
 	f, err := os.Open(p)
 	if err != nil {
-		return
+		return nil, err
 	}
 	defer f.Close()
 
-	blog = new(Blog)
 	d := json.NewDecoder(f)
-	if err = d.Decode(blog); err == nil {
-		blog.configPath = path.Clean(p)
+	var config configFile
+	if err = d.Decode(&config); err != nil {
+		return nil, err
 	}
 
-	err = blog.parseOptions()
+	blog := &Blog{
+		config:     config,
+		configPath: path.Clean(p),
+	}
+	if err := blog.parseOptions(); err != nil {
+		return nil, err
+	}
 
-	return
+	return blog, nil
 }
 
 func (b *Blog) parseOptions() error {
-	if err := parseFlags(&b.markdownExtensions, markdownExtensions, b.MarkdownExtensions); err != nil {
+	if err := parseFlags(&b.markdownExtensions, markdownExtensions, b.config.MarkdownExtensions); err != nil {
 		return fmt.Errorf("Markdown Extensions: %v", err)
 	}
-	options := b.MarkdownHTMLOptions
+	options := b.config.MarkdownHTMLOptions
 	if options == nil {
 		// The default options that were specified before the configuration allowed
 		// specification.

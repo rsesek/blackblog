@@ -75,10 +75,10 @@ func main() {
 
 	// Process flags to override configuration values.
 	if *serverPort != 0 {
-		blog.Port = *serverPort
+		blog.config.Port = *serverPort
 	}
 	if *outputDir != "" {
-		blog.OutputDir = *outputDir
+		blog.config.OutputDir = *outputDir
 	}
 
 	// Execute the specified command.

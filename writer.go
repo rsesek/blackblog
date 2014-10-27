@@ -59,8 +59,8 @@ func WriteStaticBlog(blog *Blog) error {
 	defer f.Close()
 	f.Write(index)
 
-	if blog.StaticFilesDir != "" {
-		if err := copyDir(path.Join(dest, StaticFilesDir), blog.StaticFilesDir); err != nil {
+	if blog.StaticFilesDir() != "" {
+		if err := copyDir(path.Join(dest, StaticFilesDir), blog.StaticFilesDir()); err != nil {
 			return errors.New("Copying static files: " + err.Error())
 		}
 	}
@@ -72,7 +72,7 @@ func WriteStaticBlog(blog *Blog) error {
 // to the given destination path.
 func writeRenderTree(dest string, blog *Blog, root *render) error {
 	if root.t != renderTypeDirectory {
-		return fmt.Errorf("writeRenderTree for %q: not a directory", blog.OutputDir)
+		return fmt.Errorf("writeRenderTree for %q: not a directory", blog.GetOutputDir())
 	}
 
 	// Iterate over this renderTree's subnodes.

@@ -167,7 +167,7 @@ func wrapPage(content []byte, vars PageParams) ([]byte, error) {
 }
 
 func (p *PageParams) getTemplate(name string) (*template.Template, error) {
-	name = path.Join(p.Blog.TemplatesDir, name+".html")
+	name = path.Join(p.Blog.TemplatesDir(), name+".html")
 	return template.ParseFiles(name)
 }
 

@@ -52,8 +52,8 @@ func StartBlogServer(blog *Blog) error {
 	}
 	go server.pollPostChanges()
 
-	if blog.StaticFilesDir != "" {
-		http.Handle(StaticFilesDir, http.StripPrefix(StaticFilesDir, http.FileServer(http.Dir(blog.StaticFilesDir))))
+	if blog.StaticFilesDir() != "" {
+		http.Handle(StaticFilesDir, http.StripPrefix(StaticFilesDir, http.FileServer(http.Dir(blog.StaticFilesDir()))))
 	}
 
 	http.Handle("/", server)
