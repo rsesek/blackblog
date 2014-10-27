@@ -58,8 +58,8 @@ func StartBlogServer(blog *Blog) error {
 
 	http.Handle("/", server)
 
-	fmt.Printf("Starting blog server on port %d\n", blog.Port)
-	return http.ListenAndServe(fmt.Sprintf(":%d", blog.Port), nil)
+	fmt.Printf("Starting blog server on port %d\n", blog.Port())
+	return http.ListenAndServe(fmt.Sprintf(":%d", blog.Port()), nil)
 }
 
 func (b *blogServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
