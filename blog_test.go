@@ -20,7 +20,7 @@ package main
 import (
 	"testing"
 
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 func verifyConfig(b *Blog, t *testing.T) {
@@ -101,12 +101,12 @@ func TestExtensionsAndOptions(t *testing.T) {
 	blog.parseOptions()
 
 	extensions := blog.GetMarkdownExtensions()
-	if extensions != blackfriday.EXTENSION_FOOTNOTES|blackfriday.EXTENSION_NO_INTRA_EMPHASIS {
+	if extensions != blackfriday.Footnotes|blackfriday.NoIntraEmphasis {
 		t.Errorf("Incorrect extensions-to-flags conversion")
 	}
 
 	options := blog.GetMarkdownHTMLOptions()
-	if options != blackfriday.HTML_USE_SMARTYPANTS|blackfriday.HTML_USE_XHTML|blackfriday.HTML_SMARTYPANTS_LATEX_DASHES|blackfriday.HTML_SAFELINK|blackfriday.HTML_TOC {
+	if options != blackfriday.Smartypants|blackfriday.UseXHTML|blackfriday.SmartypantsLatexDashes|blackfriday.Safelink|blackfriday.TOC {
 		t.Errorf("Incorrect HTML-options-to-flags conversion")
 	}
 
@@ -116,7 +116,7 @@ func TestExtensionsAndOptions(t *testing.T) {
 	if blog.GetMarkdownExtensions() != 0 {
 		t.Errorf("Default markdown extensions should be empty, got %#x", blog.GetMarkdownExtensions())
 	}
-	expected := blackfriday.HTML_USE_SMARTYPANTS | blackfriday.HTML_USE_XHTML | blackfriday.HTML_SMARTYPANTS_LATEX_DASHES
+	expected := blackfriday.Smartypants | blackfriday.UseXHTML | blackfriday.SmartypantsLatexDashes | blackfriday.SmartypantsDashes
 	if blog.GetMarkdownHTMLOptions() != expected {
 		t.Errorf("Default markdown HTML options should be %#x, got %#x", expected, blog.GetMarkdownHTMLOptions())
 	}

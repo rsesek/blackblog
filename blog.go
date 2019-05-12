@@ -24,7 +24,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 const ConfigFileName = "blackblog.json"
@@ -36,8 +36,8 @@ type Blog struct {
 	config configFile
 
 	// Parsed values of the string versions in the config.
-	markdownExtensions  int
-	markdownHTMLOptions int
+	markdownExtensions  blackfriday.Extensions
+	markdownHTMLOptions blackfriday.HTMLFlags
 
 	// Path to the configuration file (including "blackblog.json").
 	configPath string
@@ -102,11 +102,11 @@ func (b *Blog) getPath(part string) string {
 	return path.Join(path.Dir(b.configPath), part)
 }
 
-func (b *Blog) GetMarkdownExtensions() int {
+func (b *Blog) GetMarkdownExtensions() blackfriday.Extensions {
 	return b.markdownExtensions
 }
 
-func (b *Blog) GetMarkdownHTMLOptions() int {
+func (b *Blog) GetMarkdownHTMLOptions() blackfriday.HTMLFlags {
 	return b.markdownHTMLOptions
 }
 
@@ -141,65 +141,100 @@ func ReadBlog(p string) (*Blog, error) {
 }
 
 func (b *Blog) parseOptions() error {
-	if err := parseFlags(&b.markdownExtensions, markdownExtensions, b.config.MarkdownExtensions); err != nil {
-		return fmt.Errorf("Markdown Extensions: %v", err)
+	for _, flag := range b.config.MarkdownExtensions {
+		value, ok := markdownExtensions[flag]
+		if !ok {
+			return fmt.Errorf("Unknown Markdown extensions: %v", flag)
+		}
+		b.markdownExtensions |= value
 	}
-	options := b.config.MarkdownHTMLOptions
-	if options == nil {
+
+	if b.config.MarkdownHTMLOptions == nil {
 		// The default options that were specified before the configuration allowed
 		// specification.
-		options = []string{"HTML_USE_SMARTYPANTS", "HTML_USE_XHTML", "HTML_SMARTYPANTS_LATEX_DASHES"}
-	}
-	if err := parseFlags(&b.markdownHTMLOptions, markdownHTMLOptions, options); err != nil {
-		return fmt.Errorf("Markdown HTML Options: %v", err)
-	}
-	return nil
-}
-
-func parseFlags(flags *int, allowedFlags map[string]int, specifiedFlags []string) error {
-	for _, flag := range specifiedFlags {
-		value, ok := allowedFlags[flag]
-		if !ok {
-			return fmt.Errorf("Unknown flag %q", flag)
+		b.markdownHTMLOptions = blackfriday.Smartypants | blackfriday.UseXHTML | blackfriday.SmartypantsLatexDashes | blackfriday.SmartypantsDashes
+	} else {
+		for _, flag := range b.config.MarkdownHTMLOptions {
+			value, ok := markdownHTMLOptions[flag]
+			if !ok {
+				return fmt.Errorf("Unknown Markdown HTML option: %v", flag)
+			}
+			b.markdownHTMLOptions |= value
 		}
-		*flags |= value
 	}
 	return nil
 }
 
 var (
-	markdownExtensions = map[string]int{
-		"EXTENSION_NO_INTRA_EMPHASIS":          blackfriday.EXTENSION_NO_INTRA_EMPHASIS,
-		"EXTENSION_TABLES":                     blackfriday.EXTENSION_TABLES,
-		"EXTENSION_FENCED_CODE":                blackfriday.EXTENSION_FENCED_CODE,
-		"EXTENSION_AUTOLINK":                   blackfriday.EXTENSION_AUTOLINK,
-		"EXTENSION_STRIKETHROUGH":              blackfriday.EXTENSION_STRIKETHROUGH,
-		"EXTENSION_LAX_HTML_BLOCKS":            blackfriday.EXTENSION_LAX_HTML_BLOCKS,
-		"EXTENSION_SPACE_HEADERS":              blackfriday.EXTENSION_SPACE_HEADERS,
-		"EXTENSION_HARD_LINE_BREAK":            blackfriday.EXTENSION_HARD_LINE_BREAK,
-		"EXTENSION_TAB_SIZE_EIGHT":             blackfriday.EXTENSION_TAB_SIZE_EIGHT,
-		"EXTENSION_FOOTNOTES":                  blackfriday.EXTENSION_FOOTNOTES,
-		"EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK": blackfriday.EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK,
-		"EXTENSION_HEADER_IDS":                 blackfriday.EXTENSION_HEADER_IDS,
-		"EXTENSION_TITLEBLOCK":                 blackfriday.EXTENSION_TITLEBLOCK,
+	markdownExtensions = map[string]blackfriday.Extensions{
+		// Legacy names:
+		"EXTENSION_NO_INTRA_EMPHASIS":          blackfriday.NoIntraEmphasis,
+		"EXTENSION_TABLES":                     blackfriday.Tables,
+		"EXTENSION_FENCED_CODE":                blackfriday.FencedCode,
+		"EXTENSION_AUTOLINK":                   blackfriday.Autolink,
+		"EXTENSION_STRIKETHROUGH":              blackfriday.Strikethrough,
+		"EXTENSION_LAX_HTML_BLOCKS":            blackfriday.LaxHTMLBlocks,
+		"EXTENSION_SPACE_HEADERS":              blackfriday.SpaceHeadings,
+		"EXTENSION_HARD_LINE_BREAK":            blackfriday.HardLineBreak,
+		"EXTENSION_TAB_SIZE_EIGHT":             blackfriday.TabSizeEight,
+		"EXTENSION_FOOTNOTES":                  blackfriday.Footnotes,
+		"EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK": blackfriday.NoEmptyLineBeforeBlock,
+		"EXTENSION_HEADER_IDS":                 blackfriday.HeadingIDs,
+		"EXTENSION_TITLEBLOCK":                 blackfriday.Titleblock,
+
+		"NoExtensions":           blackfriday.NoExtensions,
+		"NoIntraEmphasis":        blackfriday.NoIntraEmphasis,
+		"Tables":                 blackfriday.Tables,
+		"FencedCode":             blackfriday.FencedCode,
+		"Autolink":               blackfriday.Autolink,
+		"Strikethrough":          blackfriday.Strikethrough,
+		"LaxHTMLBlocks":          blackfriday.LaxHTMLBlocks,
+		"SpaceHeadings":          blackfriday.SpaceHeadings,
+		"HardLineBreak":          blackfriday.HardLineBreak,
+		"TabSizeEight":           blackfriday.TabSizeEight,
+		"Footnotes":              blackfriday.Footnotes,
+		"NoEmptyLineBeforeBlock": blackfriday.NoEmptyLineBeforeBlock,
+		"HeadingIDs":             blackfriday.HeadingIDs,
+		"Titleblock":             blackfriday.Titleblock,
+		"AutoHeadingIDs":         blackfriday.AutoHeadingIDs,
+		"BackslashLineBreak":     blackfriday.BackslashLineBreak,
+		"DefinitionLists":        blackfriday.DefinitionLists,
 	}
 
-	markdownHTMLOptions = map[string]int{
-		"HTML_SKIP_HTML":                blackfriday.HTML_SKIP_HTML,
-		"HTML_SKIP_STYLE":               blackfriday.HTML_SKIP_STYLE,
-		"HTML_SKIP_IMAGES":              blackfriday.HTML_SKIP_IMAGES,
-		"HTML_SKIP_LINKS":               blackfriday.HTML_SKIP_LINKS,
-		"HTML_SANITIZE_OUTPUT":          blackfriday.HTML_SANITIZE_OUTPUT,
-		"HTML_SAFELINK":                 blackfriday.HTML_SAFELINK,
-		"HTML_NOFOLLOW_LINKS":           blackfriday.HTML_NOFOLLOW_LINKS,
-		"HTML_HREF_TARGET_BLANK":        blackfriday.HTML_HREF_TARGET_BLANK,
-		"HTML_TOC":                      blackfriday.HTML_TOC,
-		"HTML_OMIT_CONTENTS":            blackfriday.HTML_OMIT_CONTENTS,
-		"HTML_COMPLETE_PAGE":            blackfriday.HTML_COMPLETE_PAGE,
-		"HTML_USE_XHTML":                blackfriday.HTML_USE_XHTML,
-		"HTML_USE_SMARTYPANTS":          blackfriday.HTML_USE_SMARTYPANTS,
-		"HTML_SMARTYPANTS_FRACTIONS":    blackfriday.HTML_SMARTYPANTS_FRACTIONS,
-		"HTML_SMARTYPANTS_LATEX_DASHES": blackfriday.HTML_SMARTYPANTS_LATEX_DASHES,
-		"HTML_FOOTNOTE_RETURN_LINKS":    blackfriday.HTML_FOOTNOTE_RETURN_LINKS,
+	markdownHTMLOptions = map[string]blackfriday.HTMLFlags{
+		// Legacy names:
+		"HTML_SKIP_HTML":                blackfriday.SkipHTML,
+		"HTML_SKIP_IMAGES":              blackfriday.SkipImages,
+		"HTML_SKIP_LINKS":               blackfriday.SkipLinks,
+		"HTML_SAFELINK":                 blackfriday.Safelink,
+		"HTML_NOFOLLOW_LINKS":           blackfriday.NofollowLinks,
+		"HTML_HREF_TARGET_BLANK":        blackfriday.HrefTargetBlank,
+		"HTML_TOC":                      blackfriday.TOC,
+		"HTML_COMPLETE_PAGE":            blackfriday.CompletePage,
+		"HTML_USE_XHTML":                blackfriday.UseXHTML,
+		"HTML_USE_SMARTYPANTS":          blackfriday.Smartypants,
+		"HTML_SMARTYPANTS_FRACTIONS":    blackfriday.SmartypantsFractions,
+		"HTML_SMARTYPANTS_LATEX_DASHES": blackfriday.SmartypantsLatexDashes,
+		"HTML_FOOTNOTE_RETURN_LINKS":    blackfriday.FootnoteReturnLinks,
+
+		"HTMLFlagsNone":           blackfriday.HTMLFlagsNone,
+		"SkipHTML":                blackfriday.SkipHTML,
+		"SkipImages":              blackfriday.SkipImages,
+		"SkipLinks":               blackfriday.SkipLinks,
+		"Safelink":                blackfriday.Safelink,
+		"NofollowLinks":           blackfriday.NofollowLinks,
+		"NoreferrerLinks":         blackfriday.NoreferrerLinks,
+		"NoopenerLinks":           blackfriday.NoopenerLinks,
+		"HrefTargetBlank":         blackfriday.HrefTargetBlank,
+		"CompletePage":            blackfriday.CompletePage,
+		"UseXHTML":                blackfriday.UseXHTML,
+		"FootnoteReturnLinks":     blackfriday.FootnoteReturnLinks,
+		"Smartypants":             blackfriday.Smartypants,
+		"SmartypantsFractions":    blackfriday.SmartypantsFractions,
+		"SmartypantsDashes":       blackfriday.SmartypantsDashes,
+		"SmartypantsLatexDashes":  blackfriday.SmartypantsLatexDashes,
+		"SmartypantsAngledQuotes": blackfriday.SmartypantsAngledQuotes,
+		"SmartypantsQuotesNBSP":   blackfriday.SmartypantsQuotesNBSP,
+		"TOC":                     blackfriday.TOC,
 	}
 )

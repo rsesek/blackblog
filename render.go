@@ -24,7 +24,7 @@ import (
 	"sort"
 	"text/template"
 
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 // RenderPost runs the input source through the blackfriday library.
@@ -34,10 +34,14 @@ func RenderPost(post *Post, input []byte, page PageParams) ([]byte, error) {
 		return nil, err
 	}
 
-	content := blackfriday.Markdown(
+	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
+		Flags: page.Blog.GetMarkdownHTMLOptions(),
+	})
+
+	content := blackfriday.Run(
 		input,
-		blackfriday.HtmlRenderer(page.Blog.GetMarkdownHTMLOptions(), "", ""),
-		page.Blog.GetMarkdownExtensions())
+		blackfriday.WithRenderer(renderer),
+		blackfriday.WithExtensions(page.Blog.GetMarkdownExtensions()))
 
 	page.Title = post.Title
 	params := PostPageParams{
@@ -109,9 +113,9 @@ func CreatePageParams(blog *Blog, render *render) PageParams {
 		rootPath = depthPath(render)
 	}
 	return PageParams{
-		Blog: blog,
+		Blog:     blog,
 		RootPath: rootPath,
-		URL: url,
+		URL:      url,
 	}
 }
 
