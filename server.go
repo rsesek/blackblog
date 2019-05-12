@@ -106,7 +106,7 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 		}
 		rw.Write(content)
 	case renderTypeRedirect:
-		fallthrough
+		http.Redirect(rw, req, render.object.(string), http.StatusMovedPermanently)
 	case renderTypeDirectory:
 		// The root element should generate a post list.
 		if render.t == renderTypeDirectory && render.parent == nil {
@@ -126,7 +126,7 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 			render = render.object.(renderTree)["index.html"]
 		}
 
-		http.Redirect(rw, req, render.object.(string), http.StatusMovedPermanently)
+		b.serveNode(rw, req, render)
 	default:
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(rw, "Unknown render: %v", render)
