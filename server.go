@@ -94,10 +94,7 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 		data, err := post.GetContents()
 		var content []byte
 		if err == nil {
-			content, err = RenderPost(post, data, PageParams{
-				Blog:     b.blog,
-				RootPath: depthPath(render),
-			})
+			content, err = RenderPost(post, data, CreatePageParams(b.blog, render))
 		}
 		if err != nil {
 			rw.WriteHeader(http.StatusNotFound)
@@ -110,7 +107,7 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 	case renderTypeDirectory:
 		// The root element should generate a post list.
 		if render.t == renderTypeDirectory && render.parent == nil {
-			index, err := CreateIndex(b.posts, PageParams{Blog: b.blog})
+			index, err := CreateIndex(b.posts, b.blog)
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(rw, err.Error())

@@ -56,7 +56,9 @@ func RenderPost(post *Post, input []byte, page PageParams) ([]byte, error) {
 
 // CreateIndex takes the sorted list of posts and generates HTML output listing
 // each one.
-func CreateIndex(posts PostList, page PageParams) ([]byte, error) {
+func CreateIndex(posts PostList, blog *Blog) ([]byte, error) {
+	page := CreatePageParams(blog, nil)
+
 	tpl, err := page.getTemplate("index")
 	if err != nil {
 		return nil, err
@@ -90,6 +92,27 @@ type PageParams struct {
 
 	// Relative path linking up to the root of the blog.
 	RootPath string
+
+	// Relative path to the page being rendered.
+	URL string
+}
+
+// CreatePageParams sets up the parameters for PageParams.
+func CreatePageParams(blog *Blog, render *render) PageParams {
+	var url, rootPath string
+	if render == nil {
+		url = "index.html"
+		rootPath = ""
+	} else {
+		post := render.object.(*Post)
+		url = post.CreateURL()
+		rootPath = depthPath(render)
+	}
+	return PageParams{
+		Blog: blog,
+		RootPath: rootPath,
+		URL: url,
+	}
 }
 
 // The directory in which static files live.

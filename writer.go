@@ -48,7 +48,7 @@ func WriteStaticBlog(blog *Blog) error {
 		return errors.New("Write files: " + err.Error())
 	}
 
-	index, err := CreateIndex(posts, PageParams{Blog: blog})
+	index, err := CreateIndex(posts, blog)
 	var f *os.File
 	if err == nil {
 		f, err = os.Create(path.Join(blog.GetOutputDir(), "index.html"))
@@ -98,10 +98,7 @@ func writeRenderTree(dest string, blog *Blog, root *render) error {
 			}
 
 			// Try to render the post.
-			html, err := RenderPost(post, content, PageParams{
-				Blog:     blog,
-				RootPath: depthPath(render),
-			})
+			html, err := RenderPost(post, content, CreatePageParams(blog, render))
 			if err != nil {
 				return err
 			}
