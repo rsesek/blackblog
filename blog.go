@@ -80,11 +80,14 @@ func (b *Blog) Port() int {
 }
 
 func (b *Blog) TemplatesDir() string {
-	return b.config.TemplatesDir
+	return b.getPath(b.config.TemplatesDir)
 }
 
 func (b *Blog) StaticFilesDir() string {
-	return b.config.StaticFilesDir
+	if b.config.StaticFilesDir == "" {
+		return ""
+	}
+	return b.getPath(b.config.StaticFilesDir)
 }
 
 func (b *Blog) GetPostsDir() string {

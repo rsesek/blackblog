@@ -34,7 +34,7 @@ func verifyConfig(b *Blog, t *testing.T) {
 		{b.Title(), "Head of a Cow", "Title"},
 		{b.config.PostsDir, "./", "PostsDir"},
 		{b.config.TemplatesDir, "../templates", "TemplatesDir"},
-		{b.StaticFilesDir(), "../templates/static/", "StaticFilesDir"},
+		{b.StaticFilesDir(), "templates/static", "StaticFilesDir"},
 		{b.config.OutputDir, "../out/", "OutputDir"},
 		{b.configPath, "tests/blackblog.json", "configPath"},
 	}
