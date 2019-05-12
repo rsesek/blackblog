@@ -106,7 +106,7 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 		http.Redirect(rw, req, render.object.(string), http.StatusMovedPermanently)
 	case renderTypeDirectory:
 		// The root element should generate a post list.
-		if render.t == renderTypeDirectory && render.parent == nil {
+		if render.parent == nil {
 			index, err := CreateIndex(b.posts, b.blog)
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
@@ -114,16 +114,11 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 				return
 			}
 			rw.Write(index)
-			return
-		}
-
-		// Other directories when accessed directly should fallback to the
-		// redirect.
-		if render.t == renderTypeDirectory {
+		} else {
+			// Otherwise, render the index.html node.
 			render = render.object.(renderTree)["index.html"]
+			b.serveNode(rw, req, render)
 		}
-
-		b.serveNode(rw, req, render)
 	default:
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(rw, "Unknown render: %v", render)
