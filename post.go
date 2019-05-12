@@ -204,6 +204,8 @@ func (p *Post) CreateURL() string {
 	basename = strings.ToLower(basename)
 	if strings.HasSuffix(basename, "_") {
 		basename = basename[:len(basename)-1]
+	} else if strings.HasSuffix(basename, "/") {
+		basename += "index"
 	}
 	url := basename + ".html"
 
