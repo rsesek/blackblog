@@ -130,6 +130,7 @@ func (p *Post) GetContents() ([]byte, error) {
 
 		// Skip lines that are for metadata.
 		if len(line) >= 2 && string(line[0:2]) == "~~" {
+			p.parseMetadataLine(line)
 			continue
 		}
 
