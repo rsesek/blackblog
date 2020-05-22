@@ -171,6 +171,7 @@ func newBlog(at string) error {
 var (
 	defaultConfig = `{
 	"Title": "A Black Blog",
+	"URL": "https://example.com/blog/",
 	"PostsDir": "./posts",
 	"TemplatesDir": "{{.InstallDir}}/templates",
 	"StaticFilesDir": "{{.InstallDir}}/templates/static",

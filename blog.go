@@ -47,6 +47,9 @@ type configFile struct {
 	// The name of the blog, used in page titles.
 	Title string
 
+	// The full base URL of the blog. Used for producing permalinks.
+	URL string
+
 	// Path to the directory containing the Markdown files used for posts.
 	PostsDir string
 
@@ -73,6 +76,10 @@ type configFile struct {
 
 func (b *Blog) Title() string {
 	return b.config.Title
+}
+
+func (b *Blog) URL() string {
+	return b.config.URL
 }
 
 func (b *Blog) Port() int {

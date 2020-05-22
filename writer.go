@@ -92,13 +92,9 @@ func writeRenderTree(dest string, blog *Blog, root *render) error {
 		case renderTypePost:
 			// For posts, just render the content into the template.
 			post := render.object.(*Post)
-			content, err := post.GetContents()
-			if err != nil {
-				return err
-			}
 
 			// Try to render the post.
-			html, err := RenderPost(post, content, CreatePageParams(blog, render))
+			html, err := RenderPost(post, CreatePageParams(blog, render))
 			if err != nil {
 				return err
 			}
@@ -116,6 +112,18 @@ func writeRenderTree(dest string, blog *Blog, root *render) error {
 				return err
 			}
 			fmt.Fprint(f, generateRedirect(render.object.(string)))
+			f.Close()
+		case renderTypeFeed:
+			xml, err := CreateXMLFeed(render.object.(PostList), blog)
+			if err != nil {
+				return err
+			}
+
+			f, err := os.Create(p)
+			if err != nil {
+				return err
+			}
+			f.Write(xml)
 			f.Close()
 		default:
 			return fmt.Errorf("writeRenderTree for %q: unknown renderType %v", p, render.t)

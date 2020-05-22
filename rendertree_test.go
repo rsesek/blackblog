@@ -42,20 +42,26 @@ func TestRootTree(t *testing.T) {
 		t.Errorf("Root object should be a renderTree, is %v", root.object)
 	}
 
-	if len(contents) != 1 {
-		t.Errorf("Root's renderTree should have 1 object, has %d", len(contents))
+	if len(contents) != 2 {
+		t.Errorf("Root's renderTree should have 2 object, has %d", len(contents))
 	}
 
-	for k, v := range contents {
-		e := "test_post.html"
-		if k != e {
-			t.Errorf("Single key should be %q, got %q", e, k)
+	if node, ok := contents["feed.xml"]; !ok {
+		t.Errorf("renderTree root does not contain feed.xml")
+	} else {
+		if node.t != renderTypeFeed {
+			t.Errorf("feed.xml does not have the right type, expected %v, got %v", renderTypeFeed, node.t)
 		}
-		if v.object != one {
-			t.Errorf("Single value should be %v, got %v", one, v)
+	}
+
+	if node, ok := contents["test_post.html"]; !ok {
+		t.Errorf("renderTree does not contain test_post.html")
+	} else {
+		if node.object != one {
+			t.Errorf("Single value should be %v, got %v", one, node.object)
 		}
-		if v.parent != root {
-			t.Errorf("Single value parent should be %v, got %v", root, v.parent)
+		if node.parent != root {
+			t.Errorf("Single value parent should be %v, got %v", root, node.parent)
 		}
 	}
 }
@@ -73,7 +79,7 @@ func TestTwoDirs(t *testing.T) {
 		t.Errorf("Root object should be a render tree, is %v", root.object)
 	}
 
-	if len(contents) != 1 {
+	if len(contents) != 2 {
 		t.Errorf("Root's renderTree should have 1 object, has %d", len(contents))
 	}
 

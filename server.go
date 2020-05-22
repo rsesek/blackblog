@@ -91,19 +91,13 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 	switch render.t {
 	case renderTypePost:
 		post := render.object.(*Post)
-		data, err := post.GetContents()
-		var content []byte
-		if err == nil {
-			content, err = RenderPost(post, data, CreatePageParams(b.blog, render))
-		}
+		content, err := RenderPost(post, CreatePageParams(b.blog, render))
 		if err != nil {
 			rw.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(rw, err.Error())
 			return
 		}
 		rw.Write(content)
-	case renderTypeRedirect:
-		http.Redirect(rw, req, render.object.(string), http.StatusMovedPermanently)
 	case renderTypeDirectory:
 		// The root element should generate a post list.
 		if render.parent == nil {
@@ -119,6 +113,17 @@ func (b *blogServer) serveNode(rw http.ResponseWriter, req *http.Request, render
 			render = render.object.(renderTree)["index.html"]
 			b.serveNode(rw, req, render)
 		}
+	case renderTypeRedirect:
+		http.Redirect(rw, req, render.object.(string), http.StatusMovedPermanently)
+	case renderTypeFeed:
+		posts := render.object.(PostList)
+		content, err := CreateXMLFeed(posts, b.blog)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(rw, err.Error())
+			return
+		}
+		rw.Write(content)
 	default:
 		rw.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(rw, "Unknown render: %v", render)

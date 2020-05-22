@@ -31,6 +31,7 @@ const (
 	renderTypePost                        // A Post object.
 	renderTypeDirectory                   // A renderTree.
 	renderTypeRedirect                    // Link back to the root.
+	renderTypeFeed                        // A PostList.
 )
 
 // A renderTree maps a URL fragment to a render object for the current level in
@@ -55,6 +56,8 @@ func (r *render) String() string {
 		t = "Dir"
 	case renderTypeRedirect:
 		t = "Redirect"
+	case renderTypeFeed:
+		t = "Feed"
 	default:
 		t = "???"
 	}
@@ -67,6 +70,10 @@ func createRenderTree(posts PostList) (*render, error) {
 	root := &render{
 		t:      renderTypeDirectory,
 		object: make(renderTree),
+	}
+	root.object.(renderTree)["feed.xml"] = &render{
+		t:      renderTypeFeed,
+		object: posts,
 	}
 	for _, p := range posts {
 		if err := insertPost(p, root); err != nil {

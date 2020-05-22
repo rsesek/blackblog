@@ -1,6 +1,8 @@
 {
   "Title": "Head of a Cow",
 
+  "URL": "https://github.com/rsesek/blackblog/tests/",
+
   "PostsDir": "./",
 
   "TemplatesDir": "../templates",

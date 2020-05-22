@@ -23,30 +23,30 @@ import (
 	"path"
 	"sort"
 	"text/template"
+	"time"
 
+	"github.com/gorilla/feeds"
 	"github.com/russross/blackfriday/v2"
 )
 
+const xmlFeedNumPosts = 15
+
 // RenderPost runs the input source through the blackfriday library.
-func RenderPost(post *Post, input []byte, page PageParams) ([]byte, error) {
+func RenderPost(post *Post, page PageParams) ([]byte, error) {
+	content, err := renderPostMarkdown(page.Blog, post)
+	if err != nil {
+		return nil, err
+	}
+
 	tpl, err := page.getTemplate("post")
 	if err != nil {
 		return nil, err
 	}
 
-	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
-		Flags: page.Blog.GetMarkdownHTMLOptions(),
-	})
-
-	content := blackfriday.Run(
-		input,
-		blackfriday.WithRenderer(renderer),
-		blackfriday.WithExtensions(page.Blog.GetMarkdownExtensions()))
-
 	page.Title = post.Title
 	params := PostPageParams{
 		Post:       post,
-		Content:    string(content),
+		Content:    content,
 		PageParams: page,
 	}
 
@@ -56,6 +56,21 @@ func RenderPost(post *Post, input []byte, page PageParams) ([]byte, error) {
 	}
 
 	return wrapPage(buf.Bytes(), params.PageParams)
+}
+
+func renderPostMarkdown(blog *Blog, post *Post) (string, error) {
+	data, err := post.GetContents()
+	if err != nil {
+		return "", err
+	}
+	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
+		Flags: blog.GetMarkdownHTMLOptions(),
+	})
+	content := blackfriday.Run(
+		data,
+		blackfriday.WithRenderer(renderer),
+		blackfriday.WithExtensions(blog.GetMarkdownExtensions()))
+	return string(content), nil
 }
 
 // CreateIndex takes the sorted list of posts and generates HTML output listing
@@ -83,6 +98,54 @@ func CreateIndex(posts PostList, blog *Blog) ([]byte, error) {
 	}
 
 	return wrapPage(buf.Bytes(), params.PageParams)
+}
+
+// CreateXMLFeed takes a list of posts and generates an XML
+// document for an Atom feed.
+func CreateXMLFeed(posts PostList, blog *Blog) ([]byte, error) {
+	sort.Sort(posts)
+
+	numPosts := len(posts)
+	if numPosts > xmlFeedNumPosts {
+		numPosts = xmlFeedNumPosts
+	}
+
+	latestPost := time.Now()
+	generated := latestPost
+
+	items := make([]*feeds.Item, 0)
+	for i, post := range posts[:numPosts] {
+		content, err := renderPostMarkdown(blog, post)
+		if err != nil {
+			return nil, err
+		}
+
+		date := post.GetDate()
+		if date == nil {
+			continue
+		}
+
+		if i == 0 {
+			latestPost = *date
+		}
+
+		items = append(items, &feeds.Item{
+			Title:   post.Title,
+			Link:    &feeds.Link{Href: post.CreatePermalink(blog)},
+			Created: *date,
+			Content: content,
+		})
+	}
+	feed := &feeds.Feed{
+		Title:       blog.Title(),
+		Description: fmt.Sprintf("Recent posts on %s", blog.Title()),
+		Link:        &feeds.Link{Href: blog.URL()},
+		Created:     latestPost,
+		Updated:     generated,
+		Items:       items,
+	}
+	xml, err := feed.ToAtom()
+	return []byte(xml), err
 }
 
 // PageParams contains the varaibles passed to the basic header/footer

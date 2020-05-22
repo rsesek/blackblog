@@ -44,7 +44,7 @@ type Post struct {
 	URLFragment string
 
 	// The date the post was published, from the metadata.
-	Date string
+	Date       string
 	dateParsed time.Time
 
 	// The MD5 checksum of the file's contents.
@@ -216,6 +216,22 @@ func (p *Post) CreateURL() string {
 	}
 
 	return url
+}
+
+func (p *Post) CreatePermalink(b *Blog) string {
+	component := p.CreateURL()
+	base := b.URL()
+	if !strings.HasSuffix(base, "/") {
+		base += "/"
+	}
+	return base + component
+}
+
+func (p *Post) GetDate() *time.Time {
+	if p.Date == "" {
+		return nil
+	}
+	return &p.dateParsed
 }
 
 func parseDate(input string) time.Time {

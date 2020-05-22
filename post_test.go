@@ -121,6 +121,22 @@ func TestCreateURL(t *testing.T) {
 	}
 }
 
+func TestCreatePermalink(t *testing.T) {
+	baseUrls := []string{
+		"https://blog.example.com/",
+		"https://blog.example.com",
+	}
+	for _, baseUrl := range baseUrls {
+		blog := &Blog{config: configFile{URL: baseUrl}}
+		post := Post{Title: "Simple Post", Date: "22 May 2020"}
+		url := post.CreatePermalink(blog)
+		expected := "https://blog.example.com/2020/5/simple_post.html"
+		if url != expected {
+			t.Errorf("Expected %q, got %q", expected, url)
+		}
+	}
+}
+
 type parseDateResult struct {
 	in  string
 	out time.Time
