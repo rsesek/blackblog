@@ -10,11 +10,6 @@ useful when writing because your words will automatically be updated when you
 reload blog pages. In compile mode, your blog is rendered out to a directory of
 static HTML files, which can then be hosted by an web server.
 
-## Beta Software
-
-Blackblog is beta software. It is used to publish my personal blog and is
-feature complete, but it is not yet well-tested beyond that and its unit tests.
-
 ## Installation
 
 To use Blackblog, you must first have [Go](http://golang.org) installed on your
