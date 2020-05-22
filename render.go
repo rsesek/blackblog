@@ -103,7 +103,7 @@ func CreateIndex(posts PostList, blog *Blog) ([]byte, error) {
 // CreateXMLFeed takes a list of posts and generates an XML
 // document for an Atom feed.
 func CreateXMLFeed(posts PostList, blog *Blog) ([]byte, error) {
-	sort.Sort(posts)
+	sort.Sort(sort.Reverse(posts))
 
 	numPosts := len(posts)
 	if numPosts > xmlFeedNumPosts {
