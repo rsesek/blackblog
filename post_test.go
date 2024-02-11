@@ -48,10 +48,23 @@ func TestParseMetadataLine(t *testing.T) {
 
 	for _, r := range results {
 		var p Post
-		p.parseMetadataLine(r.input)
+		if err := p.parseMetadataLine(r.input); err != nil {
+			t.Errorf("Unexpected parse error for %q", r.input)
+		}
 		rp := r.post
 		if p.Title != rp.Title || p.Date != rp.Date || p.URLFragment != rp.URLFragment {
 			t.Errorf("Parse error for input '%s', expected '%v', got '%v'", r.input, r.post, p)
+		}
+	}
+
+	badInput := []string{
+		"-- Title: bad",
+		"~~~ Title",
+	}
+	for _, i := range badInput {
+		var p Post
+		if err := p.parseMetadataLine(i); err == nil {
+			t.Errorf("Expected error parsing malformed line %q", i)
 		}
 	}
 }

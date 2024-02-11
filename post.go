@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -160,7 +161,9 @@ func (p *Post) parse(opts parseOptions) ([]byte, error) {
 
 		// Skip lines that are for metadata.
 		if len(line) >= 2 && string(line[0:2]) == "~~" {
-			p.parseMetadataLine(line)
+			if err := p.parseMetadataLine(line); err != nil {
+				return nil, err
+			}
 			continue
 		}
 
@@ -179,15 +182,17 @@ func (p *Post) parse(opts parseOptions) ([]byte, error) {
 	return contents, nil
 }
 
-func (p *Post) parseMetadataLine(line string) {
+func (p *Post) parseMetadataLine(line string) error {
 	if len(line) < 2 || line[0:2] != "~~" {
-		return
+		return errors.New("metadata lines should start with \"~~\"")
 	}
-	line = line[2:]
+	return p.parseMetadataPair(line[2:])
+}
 
+func (p *Post) parseMetadataPair(line string) error {
 	pieces := strings.SplitN(line, ":", 2)
 	if len(pieces) != 2 {
-		return
+		return fmt.Errorf("invalid format for metadata pair: %q", line)
 	}
 
 	val := strings.TrimSpace(pieces[1])
@@ -200,6 +205,8 @@ func (p *Post) parseMetadataLine(line string) {
 	case "date":
 		p.Date = val
 	}
+	// Posts can have metadata that is not interpreted by Blackblog.
+	return nil
 }
 
 // CreateURL constructs the URL of a post based on its metadata.
