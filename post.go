@@ -112,13 +112,43 @@ func computeChecksum(file *os.File) []byte {
 
 // GetContents returns the Markdown content of a post, excluding metadata.
 func (p *Post) GetContents() ([]byte, error) {
+	return p.parse(parseContents)
+}
+
+// UpdateMetadata re-reads the file on disk and updates the in-memory metadata.
+func (p *Post) UpdateMetadata() {
+	p.parse(parseLazily)
+}
+
+type parseOptions uint
+
+const (
+	// parseLazily only reloads the metadata if the post is out-of-date.
+	parseLazily parseOptions = iota
+	// parseReloadMetadata unconditionally reloads the post metadata.
+	parseReloadMetadata
+	// parseContents unconditionally reloads the post metadata and returns
+	// the post contents.
+	parseContents
+)
+
+// parse parses the Post according to `opts`. Returns the post contents if
+// `opts` is `parseContents`, otherwise only returns an error if one occurs.
+func (p *Post) parse(opts parseOptions) ([]byte, error) {
 	file, err := p.Open()
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	var result []byte
+	if opts == parseLazily && p.isUpToDateInternal(file) {
+		return nil, nil
+	}
+
+	p.checksum = computeChecksum(file)
+	file.Seek(0, 0)
+
+	var contents []byte
 	reader := bufio.NewReader(file)
 	for {
 		line, err := reader.ReadString('\n')
@@ -134,35 +164,19 @@ func (p *Post) GetContents() ([]byte, error) {
 			continue
 		}
 
+		if opts == parseReloadMetadata {
+			return nil, nil
+		}
+
 		// Store the rest of the file.
-		result = append(result, line...)
+		contents = append(contents, line...)
 
 		// If this is the end of file, exit the loop to return the result.
 		if err == io.EOF {
 			break
 		}
 	}
-	return result, nil
-}
-
-// UpdateMetadata re-reads the file on disk and updates the in-memory metadata.
-func (p *Post) UpdateMetadata() {
-	file, err := p.Open()
-	if err != nil || p.isUpToDateInternal(file) {
-		return
-	}
-	defer file.Close()
-	p.checksum = computeChecksum(file)
-
-	file.Seek(0, 0)
-	reader := bufio.NewReader(file)
-	for {
-		line, err := reader.ReadString('\n')
-		if err == io.EOF || len(line) < 2 || line[0:2] != "~~" {
-			break
-		}
-		p.parseMetadataLine(line)
-	}
+	return contents, nil
 }
 
 func (p *Post) parseMetadataLine(line string) {
