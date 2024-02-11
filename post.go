@@ -233,13 +233,14 @@ func (p *Post) parseMetadataPair(line string) error {
 	return nil
 }
 
+var urlFromBasename = regexp.MustCompile("[^A-Za-z0-9_]+")
+
 // CreateURL constructs the URL of a post based on its metadata.
 func (p *Post) CreateURL() string {
 	// First, create the file's basename.
 	basename := p.URLFragment
 	if basename == "" && p.Title != "" {
-		basename = regexp.MustCompile("[^A-Za-z0-9_]").ReplaceAllString(p.Title, "_")
-		basename = regexp.MustCompile("_{1,}").ReplaceAllString(basename, "_")
+		basename = urlFromBasename.ReplaceAllString(p.Title, "_")
 	} else if basename == "" {
 		basename = path.Base(p.Filename)
 		ext := path.Ext(basename)
