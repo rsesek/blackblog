@@ -239,7 +239,12 @@ func parseDate(input string) time.Time {
 		return time.Time{}
 	}
 
-	t, err := time.Parse("_2 January 2006", input)
+	t, err := time.Parse("2006-01-02", input)
+	if err == nil {
+		return t
+	}
+
+	t, err = time.Parse("_2 January 2006", input)
 	if err == nil {
 		return t
 	}

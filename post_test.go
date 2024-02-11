@@ -153,6 +153,7 @@ func TestParseDate(t *testing.T) {
 		{"October 12 2011", time.Date(2011, 10, 12, 0, 0, 0, 0, loc)},
 		{"August 2 2011", time.Date(2011, 8, 2, 0, 0, 0, 0, loc)},
 		{"March 2, 2012", time.Date(2012, 3, 2, 0, 0, 0, 0, loc)},
+		{"2024-02-11", time.Date(2024, 2, 11, 0, 0, 0, 0, loc)},
 	}
 
 	for _, r := range results {
