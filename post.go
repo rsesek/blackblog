@@ -133,6 +133,8 @@ const (
 	parseContents
 )
 
+const demarcFrontmatter = "---\n"
+
 // parse parses the Post according to `opts`. Returns the post contents if
 // `opts` is `parseContents`, otherwise only returns an error if one occurs.
 func (p *Post) parse(opts parseOptions) ([]byte, error) {
@@ -149,6 +151,9 @@ func (p *Post) parse(opts parseOptions) ([]byte, error) {
 	p.checksum = computeChecksum(file)
 	file.Seek(0, 0)
 
+	inMetadata := false
+	isFirstLine := true
+
 	var contents []byte
 	reader := bufio.NewReader(file)
 	for {
@@ -159,8 +164,27 @@ func (p *Post) parse(opts parseOptions) ([]byte, error) {
 			return nil, err
 		}
 
-		// Skip lines that are for metadata.
-		if len(line) >= 2 && string(line[0:2]) == "~~" {
+		if isFirstLine {
+			isFirstLine = false
+
+			if line == demarcFrontmatter {
+				inMetadata = true
+				continue
+			}
+		}
+
+		// Handle frontmatter metadata.
+		if inMetadata {
+			if line == demarcFrontmatter {
+				inMetadata = false
+			} else if err := p.parseMetadataPair(line); err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		// Handle prefix-line metadata.
+		if len(line) >= 2 && line[:2] == "~~" {
 			if err := p.parseMetadataLine(line); err != nil {
 				return nil, err
 			}

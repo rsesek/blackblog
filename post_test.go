@@ -178,3 +178,34 @@ func TestParseDate(t *testing.T) {
 		}
 	}
 }
+
+func TestFrontmatter(t *testing.T) {
+	post, err := NewPostFromPath("./tests/frontmatter.md")
+	if err != nil {
+		t.Errorf("Expected frontmatter.md to parse")
+	}
+	if want, got := "YAML frontmatter", post.Title; want != got {
+		t.Errorf("Expected title %q, got %q", want, got)
+	}
+	if want, got := "2024-02-11", post.Date; want != got {
+		t.Errorf("Expected date %q, got %q", want, got)
+	}
+	contents, err := post.GetContents()
+	if err != nil {
+		t.Errorf("Failed to get post contents: %v", err)
+	}
+	if want, got := "This is a post.\n", string(contents); want != got {
+		t.Errorf("Wanted contents %q, got %q", want, got)
+	}
+
+	post, err = NewPostFromPath("./tests/not_frontmatter.md")
+	if err != nil {
+		t.Errorf("Expected not_frontmatter.md to parse")
+	}
+	if want, got := "", post.Title; want != got {
+		t.Errorf("Expected title %q, got %q", want, got)
+	}
+	if want, got := "", post.Date; want != got {
+		t.Errorf("Expected date %q, got %q", want, got)
+	}
+}

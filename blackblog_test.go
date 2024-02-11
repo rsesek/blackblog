@@ -27,13 +27,16 @@ func TestGetPostsInDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	if len(posts) != 4 {
+	if len(posts) != 6 {
 		t.Errorf("Expecting %d posts, only got %d", 4, len(posts))
 	}
 
 	for _, post := range posts {
-		if post.Title == "" || post.Filename == "" {
-			t.Errorf("Missing title or filename in post %v", post)
+		if post.Filename == "" {
+			t.Errorf("Missing filename for %v", post)
+		}
+		if post.Title == "" && post.Filename != "tests/not_frontmatter.md" {
+			t.Errorf("Missing title for %v", post.Filename)
 		}
 	}
 }
