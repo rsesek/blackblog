@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"path"
 	"sort"
+	"strings"
 	"text/template"
 	"time"
 
@@ -63,6 +64,13 @@ func renderPostMarkdown(blog *Blog, post *Post) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	if blog.config.ConfigVersion == configVersion {
+		var buf strings.Builder
+		err = blog.md.Convert(data, &buf)
+		return buf.String(), err
+	}
+
 	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
 		Flags: blog.GetMarkdownHTMLOptions(),
 	})

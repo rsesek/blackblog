@@ -25,6 +25,10 @@ import (
 	"strings"
 
 	"github.com/russross/blackfriday/v2"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/renderer"
+	"github.com/yuin/goldmark/renderer/html"
 )
 
 const ConfigFileName = "blackblog.json"
@@ -35,7 +39,10 @@ type Blog struct {
 	// The configuration data.
 	config configFile
 
-	// Parsed values of the string versions in the config.
+	// For V2 configs, the Markdown renderer.
+	md goldmark.Markdown
+
+	// For V1 configs, parsed values of the string versions in the config.
 	markdownExtensions  blackfriday.Extensions
 	markdownHTMLOptions blackfriday.HTMLFlags
 
@@ -43,7 +50,11 @@ type Blog struct {
 	configPath string
 }
 
+const configVersion = 2
+
 type configFile struct {
+	ConfigVersion int
+
 	// The name of the blog, used in page titles.
 	Title string
 
@@ -72,6 +83,31 @@ type configFile struct {
 
 	// A list of HTML_ options to pass to the Blackfriday Markdown HTML renderer.
 	MarkdownHTMLOptions []string
+
+	GoldmarkConfig GoldmarkConfig
+}
+
+type GoldmarkConfig struct {
+	Extension struct {
+		// Enable table extension.
+		Table bool
+
+		// Typographic substitutions / "Smartypants".
+		Typographer struct {
+			Disable bool
+		}
+	}
+
+	Parse struct {
+	}
+
+	Render struct {
+		// Output XHTML instead of HTML5.
+		XHTML bool
+
+		// Allow raw HTML.
+		Unsafe bool
+	}
 }
 
 func (b *Blog) Title() string {
@@ -136,6 +172,10 @@ func ReadBlog(p string) (*Blog, error) {
 		return nil, err
 	}
 
+	if want, got := configVersion, config.ConfigVersion; want != got && got != 0 {
+		return nil, fmt.Errorf("ConfigVersion not compatible, need %d and got %d", want, got)
+	}
+
 	blog := &Blog{
 		config:     config,
 		configPath: path.Clean(p),
@@ -148,6 +188,38 @@ func ReadBlog(p string) (*Blog, error) {
 }
 
 func (b *Blog) parseOptions() error {
+	if b.config.ConfigVersion == configVersion {
+		gc := b.config.GoldmarkConfig
+
+		// Extensions.
+		exts := make([]goldmark.Extender, 0)
+
+		if !gc.Extension.Typographer.Disable {
+			exts = append(exts, extension.NewTypographer())
+		}
+		if gc.Extension.Table {
+			exts = append(exts, extension.NewTable())
+		}
+
+		// Parse options.
+		// Nothing yet...
+
+		// Render options.
+		ropts := make([]renderer.Option, 0)
+
+		if gc.Render.XHTML {
+			ropts = append(ropts, html.WithXHTML())
+		}
+		if gc.Render.Unsafe {
+			ropts = append(ropts, html.WithUnsafe())
+		}
+
+		// Assemble!
+		b.md = goldmark.New(
+			goldmark.WithExtensions(exts...),
+			goldmark.WithRendererOptions(ropts...))
+		return nil
+	}
 	for _, flag := range b.config.MarkdownExtensions {
 		value, ok := markdownExtensions[flag]
 		if !ok {
