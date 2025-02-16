@@ -28,6 +28,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer"
+	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 )
 
@@ -202,10 +203,14 @@ func (b *Blog) parseOptions() error {
 		}
 
 		// Parse options.
-		// Nothing yet...
+		popts := []parser.Option{
+			goldmarkParsers(),
+		}
 
 		// Render options.
-		ropts := make([]renderer.Option, 0)
+		ropts := []renderer.Option{
+			goldmarkRenderers(),
+		}
 
 		if gc.Render.XHTML {
 			ropts = append(ropts, html.WithXHTML())
@@ -217,6 +222,7 @@ func (b *Blog) parseOptions() error {
 		// Assemble!
 		b.md = goldmark.New(
 			goldmark.WithExtensions(exts...),
+			goldmark.WithParserOptions(popts...),
 			goldmark.WithRendererOptions(ropts...))
 		return nil
 	}
