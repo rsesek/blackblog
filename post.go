@@ -280,6 +280,13 @@ func (p *Post) GetDate() *time.Time {
 	return &p.dateParsed
 }
 
+func (p *Post) FormatDate(format string) string {
+	if p.Date == "" {
+		return ""
+	}
+	return p.dateParsed.Format(format)
+}
+
 func parseDate(input string) time.Time {
 	if input == "" {
 		return time.Time{}

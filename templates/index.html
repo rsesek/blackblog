@@ -23,7 +23,7 @@
   <li>
     <a href="{{.CreateURL}}">
       <span class="title">{{.Title}}</span>
-      {{if .Date}}&mdash; <span class="date">{{.Date}}</span>{{end}}
+      {{if .Date}}&mdash; <span class="date">{{.FormatDate "_2 January 2006"}}</span>{{end}}
     </a>
   </li>
 {{end}}
