@@ -99,6 +99,18 @@ func TestTwoDirs(t *testing.T) {
 		t.Fatalf("Year should be a renderTree, got %v", contents)
 	}
 
+	index, ok := contents["index.html"]
+	if !ok {
+		t.Errorf("Year index not present")
+	}
+	indexLink, ok := index.object.(string)
+	if !ok {
+		t.Errorf("Year index is not a string")
+	}
+	if want, got := "../", indexLink; want != got {
+		t.Errorf("Year index link should be %q, got %q", want, got)
+	}
+
 	month, ok := contents["10"]
 	if !ok {
 		t.Fatalf("Month directory not present")
@@ -113,6 +125,18 @@ func TestTwoDirs(t *testing.T) {
 	contents, ok = month.object.(renderTree)
 	if !ok {
 		t.Fatalf("Month should be a renderTree, got %v", contents)
+	}
+
+	index, ok = contents["index.html"]
+	if !ok {
+		t.Errorf("Month index not present")
+	}
+	indexLink, ok = index.object.(string)
+	if !ok {
+		t.Errorf("Month index is not a string")
+	}
+	if want, got := "../../", indexLink; want != got {
+		t.Errorf("Month index link should be %q, got %q", want, got)
 	}
 
 	postRender, ok := contents["test_post.html"]

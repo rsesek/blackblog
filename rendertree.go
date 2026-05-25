@@ -128,13 +128,9 @@ func findOrCreateDirNode(url string, root *render) (*render, error) {
 
 			// Since this is a subdirectory, accessing index.html should go up
 			// to the root. Attach the new render to the newly created directory.
-			link := ""
-			for ln := node; ln.parent != nil; ln = ln.parent {
-				link += "../"
-			}
 			node.object.(renderTree)["index.html"] = &render{
 				t:      renderTypeRedirect,
-				object: link,
+				object: strings.Repeat("../", nodeDepth(node)),
 			}
 		}
 	}
